@@ -2,7 +2,7 @@
 title: "Home"
 ---
 
-# YOUR NAME HERE {#welcome}
+# Xuanyu ZHou {#welcome}
 
 <!-- CHANGE THIS: replace with your own name above -->
 
@@ -17,8 +17,7 @@ urban policy questions.
 
 <!-- CHANGE THIS: two or three sentences about yourself -->
 
-I'm a student in the MUSA program at Penn. My background is in
-[YOUR BACKGROUND], and I'm interested in [YOUR INTERESTS].
+I'm an MCP student at Penn with a background in urban planning, GIS, and mobility research. I'm interested in urban analytics, transportation planning, and AI applications.
 
 ## What You'll Find Here
 
@@ -30,5 +29,5 @@ I'm a student in the MUSA program at Penn. My background is in
 
 <!-- CHANGE THIS -->
 
-- Email: your-email@upenn.edu
-- GitHub: [@your-username](https://github.com/your-username)
+- Email: xuanyuz@upenn.edu
+- GitHub: [@DOGZzl1xy](https://github.com/DOGZzl1xy)
