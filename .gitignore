@@ -2,6 +2,7 @@
 .Renviron
 .env
 *.pem
+.DS_Store
 
 # --- R session junk --------------------------------------------------
 .Rhistory
@@ -24,3 +25,5 @@ Thumbs.db
 .positai
 
 /.quarto/
+
+**/*.quarto_ipynb
