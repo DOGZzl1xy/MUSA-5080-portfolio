@@ -8,9 +8,16 @@ date: 2026-08-28
 
 <!-- CHANGE THIS: replace with your own notes -->
 
-Set up the portfolio workflow: made a repository from a template, cloned it with
-GitHub Desktop, edited files in RStudio, rendered with Quarto, and published to
-GitHub Pages.
+This week, I set up the basic workflow for my course portfolio. I created a
+repository from the course template, cloned it to my computer with GitHub
+Desktop, opened the project in RStudio, edited a Quarto file, and rendered it
+as a webpage. I then committed and pushed the changes to GitHub so that they
+could appear on my GitHub Pages site.
+
+I also learned that a website can be understood as a collection of HTML files
+stored on a computer or server. Quarto helps create those HTML files: I write
+content in a `.qmd` file, and Quarto renders it into an `.html` file that a web
+browser can display.
 
 ## Key Concepts
 
@@ -37,7 +44,10 @@ sessionInfo()$R.version$version.string
 
 What I want out of this course:
 
+I want to become more comfortable using R for data analysis and learn how to present my results through a clear website. I like that the portfolio will keep my coursework in one place and give me something I can show after the semester.
+
 One thing I'm nervous about:
+Using Git
 
 ## Questions I Still Have
 
