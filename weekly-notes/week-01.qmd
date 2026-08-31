@@ -19,6 +19,8 @@ stored on a computer or server. Quarto helps create those HTML files: I write
 content in a `.qmd` file, and Quarto renders it into an `.html` file that a web
 browser can display.
 
+
+
 ## Key Concepts
 
 Three places a file can live:
@@ -47,9 +49,9 @@ What I want out of this course:
 I want to become more comfortable using R for data analysis and learn how to present my results through a clear website. I like that the portfolio will keep my coursework in one place and give me something I can show after the semester.
 
 One thing I'm nervous about:
+
 Using Git
 
 ## Questions I Still Have
 
--
--
+-No Questions so far

@@ -2,7 +2,7 @@
 title: "Home"
 ---
 
-# Xuanyu ZHou {#welcome}
+# Xuanyu Zhou {#welcome}
 
 <!-- CHANGE THIS: replace with your own name above -->
 
