@@ -23,10 +23,11 @@ website:
 
 format:
   html:
-    theme: cosmo
+    theme: sketchy
     toc: true
     code-fold: false
     code-tools: true
+
 
 execute:
   freeze: auto
