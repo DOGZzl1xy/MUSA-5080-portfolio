@@ -1,33 +1,5 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Home",
-    "section": "",
-    "text": "Welcome to my portfolio for MUSA 5080: Public Policy Analytics at the University of Pennsylvania.\nThis site documents my work in the Master of Urban Spatial Analytics program — weekly notes, course assignments, and a final project applying data analysis to urban policy questions.\n\n\n\nI’m an MCP student at Penn with a background in urban planning, GIS, and mobility research. I’m interested in urban analytics, transportation planning, and AI applications.\n\n\n\n\nWeekly Notes — what I’m learning each week\nAssignments — analyses completed for the course\nAbout — more background and how to reach me\n\n\n\n\n\n\nEmail: xuanyuz@upenn.edu\nGitHub: @DOGZzl1xy"
-  },
-  {
-    "objectID": "index.html#about-me",
-    "href": "index.html#about-me",
-    "title": "Home",
-    "section": "",
-    "text": "I’m an MCP student at Penn with a background in urban planning, GIS, and mobility research. I’m interested in urban analytics, transportation planning, and AI applications."
-  },
-  {
-    "objectID": "index.html#what-youll-find-here",
-    "href": "index.html#what-youll-find-here",
-    "title": "Home",
-    "section": "",
-    "text": "Weekly Notes — what I’m learning each week\nAssignments — analyses completed for the course\nAbout — more background and how to reach me"
-  },
-  {
-    "objectID": "index.html#get-in-touch",
-    "href": "index.html#get-in-touch",
-    "title": "Home",
-    "section": "",
-    "text": "Email: xuanyuz@upenn.edu\nGitHub: @DOGZzl1xy"
-  },
-  {
     "objectID": "weekly-notes/week-01.html",
     "href": "weekly-notes/week-01.html",
     "title": "Week 1: Getting Set Up",
@@ -70,6 +42,13 @@
     "text": "Questions I Still Have\n-No Questions so far"
   },
   {
+    "objectID": "weekly-notes/index.html",
+    "href": "weekly-notes/index.html",
+    "title": "Weekly Notes",
+    "section": "",
+    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 2: dplyr and Census Data\n\n\ntable function and acs data.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+  },
+  {
     "objectID": "about.html",
     "href": "about.html",
     "title": "About Me",
@@ -105,11 +84,32 @@
     "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\nNo matching items"
   },
   {
-    "objectID": "weekly-notes/index.html",
-    "href": "weekly-notes/index.html",
-    "title": "Weekly Notes",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Home",
     "section": "",
-    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 2: Census Data\n\n\nOne line about this page.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Welcome to my portfolio for MUSA 5080: Public Policy Analytics at the University of Pennsylvania.\nThis site documents my work in the Master of Urban Spatial Analytics program — weekly notes, course assignments, and a final project applying data analysis to urban policy questions.\n\n\n\nI’m an MCP student at Penn with a background in urban planning, GIS, and mobility research. I’m interested in urban analytics, transportation planning, and AI applications.\n\n\n\n\nWeekly Notes — what I’m learning each week\nAssignments — analyses completed for the course\nAbout — more background and how to reach me\n\n\n\n\n\n\nEmail: xuanyuz@upenn.edu\nGitHub: @DOGZzl1xy"
+  },
+  {
+    "objectID": "index.html#about-me",
+    "href": "index.html#about-me",
+    "title": "Home",
+    "section": "",
+    "text": "I’m an MCP student at Penn with a background in urban planning, GIS, and mobility research. I’m interested in urban analytics, transportation planning, and AI applications."
+  },
+  {
+    "objectID": "index.html#what-youll-find-here",
+    "href": "index.html#what-youll-find-here",
+    "title": "Home",
+    "section": "",
+    "text": "Weekly Notes — what I’m learning each week\nAssignments — analyses completed for the course\nAbout — more background and how to reach me"
+  },
+  {
+    "objectID": "index.html#get-in-touch",
+    "href": "index.html#get-in-touch",
+    "title": "Home",
+    "section": "",
+    "text": "Email: xuanyuz@upenn.edu\nGitHub: @DOGZzl1xy"
   },
   {
     "objectID": "data/readme.html",
@@ -117,5 +117,47 @@
     "title": "",
     "section": "",
     "text": "Code\n\n\n\n\nData files for MUSA 5080\nDownload assignment data from Canvas and save it here. Do not rename the files! Have a nice day :)"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html",
+    "href": "weekly-notes/week-02.html",
+    "title": "Week 2: dplyr and Census Data",
+    "section": "",
+    "text": "quiz\nset up portfolio for today\nlesson about dplyr and census\npractice\nGO HOME!!!"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#what-we-did",
+    "href": "weekly-notes/week-02.html#what-we-did",
+    "title": "Week 2: dplyr and Census Data",
+    "section": "",
+    "text": "quiz\nset up portfolio for today\nlesson about dplyr and census\npractice\nGO HOME!!!"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#key-concepts",
+    "href": "weekly-notes/week-02.html#key-concepts",
+    "title": "Week 2: dplyr and Census Data",
+    "section": "Key Concepts",
+    "text": "Key Concepts"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#proving-r-works",
+    "href": "weekly-notes/week-02.html#proving-r-works",
+    "title": "Week 2: dplyr and Census Data",
+    "section": "Proving R Works",
+    "text": "Proving R Works"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#reflection",
+    "href": "weekly-notes/week-02.html#reflection",
+    "title": "Week 2: dplyr and Census Data",
+    "section": "Reflection",
+    "text": "Reflection"
+  },
+  {
+    "objectID": "weekly-notes/week-02.html#questions-i-still-have",
+    "href": "weekly-notes/week-02.html#questions-i-still-have",
+    "title": "Week 2: dplyr and Census Data",
+    "section": "Questions I Still Have",
+    "text": "Questions I Still Have"
   }
 ]

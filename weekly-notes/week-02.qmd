@@ -1,5 +1,27 @@
 ---
-title: "Week 2: Census Data"
-description: "One line about this page."
+title: "Week 2: dplyr and Census Data"
+description: "table function and acs data."
 date: 2026-09-05
 ---
+
+## What We Did
+
+- quiz
+- set up portfolio for today
+- lesson about dplyr and census
+- practice
+- GO HOME!!!
+
+
+
+
+## Key Concepts
+
+
+## Proving R Works
+
+
+## Reflection
+
+
+## Questions I Still Have
