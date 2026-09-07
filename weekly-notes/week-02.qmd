@@ -12,10 +12,63 @@ date: 2026-09-05
 - practice
 - GO HOME!!!
 
-
-
-
 ## Key Concepts
+
+### saving result in R
+```R
+result <- filter(counties, population > 5000)
+```
+
+### packages
+
+```R
+install.packages("dplyr")
+library(dplyr)
+```
+
+### Data frames and dplyr
+Main verbs:
+- filter() — choose rows based on conditions.
+- select() — choose columns.
+- mutate() — add or modify computed columns.
+- arrange() — sort rows; use desc() for descending order.
+- group_by() + summarize() — calculate statistics by group, similar to SQL aggregation.
+
+
+### Pipelines
+
+```R
+new_data <- counties |>
+  filter(moe_pct > 10) |>
+  arrange(desc(moe_pct)) |>
+  select(name, moe_pct)
+```
+
+### Getting ACS data
+
+```R
+library(tidycensus)
+
+data <- get_acs(
+  geography = "county",
+  variables = c("VARIABLE_ID_1", "VARIABLE_ID_2"),
+  state = "PA",
+  year = 2014,
+  survey = "acs5",
+  output = "wide"
+)
+```
+
+
+### GEOIDs
+
+Treat GEOIDs as strings, not numbers, so leading zeros are preserved.
+Typical components:
+- State: 2 digits
+- County: 3 digits
+- Census tract: 6 digits
+- Block group: 1 additional digit when applicable
+A state + county + tract GEOID is usually 11 digits.
 
 
 ## Proving R Works

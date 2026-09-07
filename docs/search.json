@@ -81,7 +81,7 @@
     "href": "assignments/index.html",
     "title": "Assignments",
     "section": "",
-    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\nNo matching items"
+    "text": "Completed assignments for MUSA 5080. New assignments appear here automatically once you add the .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nAssignment 2: Who Do We Know the Least About?\n\n\n\n\n\n\n\n\nSep 7, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "index.html",
@@ -137,7 +137,7 @@
     "href": "weekly-notes/week-02.html#key-concepts",
     "title": "Week 2: dplyr and Census Data",
     "section": "Key Concepts",
-    "text": "Key Concepts"
+    "text": "Key Concepts\n\nsaving result in R\n\nresult &lt;- filter(counties, population &gt; 5000)\n\npackages\n\ninstall.packages(\"dplyr\")\nlibrary(dplyr)"
   },
   {
     "objectID": "weekly-notes/week-02.html#proving-r-works",
@@ -159,5 +159,166 @@
     "title": "Week 2: dplyr and Census Data",
     "section": "Questions I Still Have",
     "text": "Questions I Still Have"
+  },
+  {
+    "objectID": "assignments/assignment2 .html",
+    "href": "assignments/assignment2 .html",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "",
+    "text": "ImportantRead this first, then delete this box\n\n\n\nWhere this file goes: assignments/assignment2.qmd in your portfolio repo.\nThis is a portfolio piece. It will be published on your website where employers can see it. So:\n\nDelete every callout box like this one before your final render. They’re instructions, not content.\nReplace YOUR NAME HERE in the header above.\nWrite in complete sentences. Someone who isn’t in this class should be able to read it and follow what you did.\n\nGraded 0 / 1 / 2. A 2 means it runs, it’s complete, and the writing shows you understood what the numbers meant — not that you did something fancy.\nDue: before next class. Rendered, committed, pushed, and visible on your live site."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#setup",
+    "href": "assignments/assignment2 .html#setup",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Setup",
+    "text": "Setup\n\nlibrary(tidyverse)\nlibrary(tidycensus)"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#the-question",
+    "href": "assignments/assignment2 .html#the-question",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "The question",
+    "text": "The question\nEvery number the American Community Survey publishes is an estimate drawn from a sample, not a count. That means every number comes with a margin of error — a statement about how wrong it might be.\nMost people ignore it. In this assignment, you won’t.\n\n\n\n\n\n\nTipDelete this box\n\n\n\nRewrite the paragraph below in your own words once you’ve picked your state and variable. Two or three sentences saying what you’re looking at and why.\n\n\nIn this analysis, I look at [YOUR VARIABLE] across counties in [YOUR STATE], and ask which communities we measure most and least reliably."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#choosing-what-to-measure",
+    "href": "assignments/assignment2 .html#choosing-what-to-measure",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Choosing what to measure",
+    "text": "Choosing what to measure\n\n\n\n\n\n\nNoteInstructions — delete this box\n\n\n\nPick a state and a variable. Anything except Pennsylvania and median household income, which we did in class.\nSome variables that work well:\n\n\n\nCode\nWhat it is\n\n\n\n\nB19013_001\nMedian household income\n\n\nB25064_001\nMedian gross rent\n\n\nB25077_001\nMedian home value\n\n\nB01002_001\nMedian age\n\n\nB08303_001\nTotal commuters (travel time table)\n\n\nB15003_022\nNumber with a bachelor’s degree\n\n\n\nWant something else? Run this in your console (not in a chunk):\nvars &lt;- load_variables(2023, \"acs5\")\nView(vars)\nThen use the search box.\n\n\n\nmy_state &lt;- \"CA\"        # two-letter abbreviation, in quotes\nmy_variable &lt;- \"B01002_001\"     # the variable code, in quotes"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#pulling-the-data",
+    "href": "assignments/assignment2 .html#pulling-the-data",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Pulling the data",
+    "text": "Pulling the data\n\ncounty_data &lt;- get_acs(\n  geography = \"county\",\n  variables = my_variable,\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\"\n)\n\nLet’s look at what came back.\n\ndim(county_data)\n\n[1] 58  5\n\nhead(county_data)\n\n# A tibble: 6 × 5\n  GEOID NAME                         variable   estimate   moe\n  &lt;chr&gt; &lt;chr&gt;                        &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;\n1 06001 Alameda County, California   B01002_001     38.7   0.2\n2 06003 Alpine County, California    B01002_001     41.1   4.8\n3 06005 Amador County, California    B01002_001     49.9   0.6\n4 06007 Butte County, California     B01002_001     36.3   0.2\n5 06009 Calaveras County, California B01002_001     52     0.7\n6 06011 Colusa County, California    B01002_001     35.7   0.9\n\n\n\n\n\n\n\n\nTipDelete this box\n\n\n\nBelow, say how many counties are in your state and confirm your row count matches. One sentence.\n\n\n[How many rows did you get? Does that match the number of counties in your state?]\n— I get 58 counties and it does matches!"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#how-big-is-the-margin-of-error",
+    "href": "assignments/assignment2 .html#how-big-is-the-margin-of-error",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "How big is the margin of error?",
+    "text": "How big is the margin of error?\nA margin of error of 3,000 means something very different for an estimate of 20,000 than for an estimate of 200,000. To compare across places, we need it as a percentage.\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(moe_pct = moe / estimate * 100)\n\n\n\n\n\n\n\nNoteDelete this box\n\n\n\nFill in the two blanks. You want: how big is the margin of error, relative to the estimate, as a percentage?\n\n\nNow sort to see which counties are measured least reliably.\n\ncounty_data %&gt;%\n  arrange(desc(moe_pct)) %&gt;%\n  select(NAME, estimate, moe, moe_pct) %&gt;%\n  head(10)\n\n# A tibble: 10 × 4\n   NAME                         estimate   moe moe_pct\n   &lt;chr&gt;                           &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;\n 1 Alpine County, California        41.1   4.8   11.7 \n 2 Sierra County, California        56     5      8.93\n 3 Mono County, California          40.3   1.8    4.47\n 4 Modoc County, California         49     2.1    4.29\n 5 Colusa County, California        35.7   0.9    2.52\n 6 Del Norte County, California     40.8   0.9    2.21\n 7 Mariposa County, California      51.6   1      1.94\n 8 Trinity County, California       54.8   0.9    1.64\n 9 Lassen County, California        37.8   0.6    1.59\n10 Plumas County, California        52.1   0.8    1.54\n\n\n\n\n\n\n\n\nTipDelete this box\n\n\n\nWrite a sentence or two naming the least reliable county and its moe_pct.\n\n\n[Which county has the largest margin of error relative to its estimate? How large is it?]\n—Alpine County, at about 11.68%"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#sorting-counties-into-reliability-categories",
+    "href": "assignments/assignment2 .html#sorting-counties-into-reliability-categories",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Sorting counties into reliability categories",
+    "text": "Sorting counties into reliability categories\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 0.5  ~ \"High confidence\",\n    moe_pct &lt; 1 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\ncount(county_data, reliability)\n\n# A tibble: 3 × 2\n  reliability         n\n  &lt;chr&gt;           &lt;int&gt;\n1 High confidence    16\n2 Low confidence     16\n3 Moderate           26\n\n\n\n\n\n\n\n\nNoteDelete this box\n\n\n\nThose cutoffs (5% and 10%) are a bit of a judgment call, not a law of nature. If almost every county lands in one category, adjust them so the split is informative for your variable — then say in your writing that you changed them and why. (I have a feeling for county-level, you may end up in high confidence everywhere - is smaller geographies where it really shows up. So feel free to change those numbers around a bit)\n\n\n[How many counties fall into each category?]\n—16 in High confidence, 16 in Low confidence, and 26 in moderate."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#is-the-margin-of-error-bigger-in-small-places",
+    "href": "assignments/assignment2 .html#is-the-margin-of-error-bigger-in-small-places",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Is the margin of error bigger in small places?",
+    "text": "Is the margin of error bigger in small places?\nTo answer this we need population and our variable side by side, in the same row. That means a wide pull.\n\ncounty_wide &lt;- get_acs(\n  geography = \"county\",\n  variables = c(myvar = my_variable,\n                pop   = \"B01003_001\"),\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\",\n  output = \"wide\"\n)\n\nhead(county_wide)\n\n# A tibble: 6 × 6\n  GEOID NAME                         myvarE myvarM    popE  popM\n  &lt;chr&gt; &lt;chr&gt;                         &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;\n1 06001 Alameda County, California     38.7    0.2 1651949    NA\n2 06003 Alpine County, California      41.1    4.8    1695   234\n3 06005 Amador County, California      49.9    0.6   41029    NA\n4 06007 Butte County, California       36.3    0.2  209470    NA\n5 06009 Calaveras County, California   52      0.7   45995    NA\n6 06011 Colusa County, California      35.7    0.9   21895    NA\n\n\n\n\n\n\n\n\nNoteDelete this box\n\n\n\nNotice the column names: myvarE, myvarM, popE, popM. The E and M suffixes are estimate and margin of error.\n\n\n\ncounty_wide &lt;- county_wide %&gt;%\n  mutate(moe_pct = myvarM / myvarE * 100) %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 5  ~ \"High confidence\",\n    moe_pct &lt; 15 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\nNow compare the average population of counties in each reliability category.\n\ncounty_wide %&gt;%\n  group_by(reliability) %&gt;%\n  summarize(\n    n_counties = n(),\n    avg_population = mean(popE)\n  )\n\n# A tibble: 2 × 3\n  reliability     n_counties avg_population\n  &lt;chr&gt;                &lt;int&gt;          &lt;dbl&gt;\n1 High confidence         56        700685.\n2 Moderate                 2          2213 \n\n\n\n\n\n\n\n\nNoteDelete this box\n\n\n\nTwo blanks. What are you grouping by? What are you averaging? :::grouping by reliability, and average the estimate population\n\n\n\n\n\n\nTipDelete this box\n\n\n\nThis table is the heart of the assignment. Describe what it shows in two or three sentences.\n\n\n[What is the average population of high-confidence counties versus low-confidence counties? Is there a pattern?]\n— The average population of high-confidence counties is 700,685 versus 2,213 for the low-confidence counties. Fewer population will bring lower confidence.\n\nWhat this means for policy\n\n\n\n\n\n\nImportantInstructions — delete this box\n\n\n\nWrite 200–250 words.\nAddress all three:\n\nWhich communities in your state do we know the least about? Name specific counties from your results.\nWhy? Connect the pattern to how the ACS actually works — it’s a sample, and smaller places yield smaller samples.\nWhat could go wrong? Imagine a state agency allocating funding using your variable, treating every county’s number as equally certain. Who is likely to be hurt, and how?\n\nUse your own numbers.\n\n\n[Your 200–250 word reflection goes here.]\n\n\n\nOptional challenges - For those craving more\n\n\n\n\n\n\nNoteDelete this box\n\n\n\nNone of these are graded. There are no extra points. A complete, well-written assignment earns a 2 either way.\nThey’re here for anyone who finished the above and found it straightforward. Pick one (or more) that interests you.\n\nPropagate the margin of error. If you compute a derived value — a percentage, a ratio, a sum — its uncertainty depends on the uncertainty of its inputs, and you can’t just carry the original MOE along. The Census Bureau publishes formulas for this, and tidycensus implements them: moe_sum(), moe_prop(), moe_ratio(). Compute something derived, and get its margin of error right.\nParameterize the report. Add params: to the YAML so the state is an input rather than hard-coded, and the same file regenerates for any state. Render it from the terminal with quarto render assignment2.qmd -P state:NY.\nWrite a function and iterate. Wrap the data pull in a function, then use purrr::map_dfr() to run it across several states at once. Does the small-places-are-noisier pattern hold everywhere, or are some states different?\nChange the geographic scale. Run the same variable at geography = \"tract\" inside one county. Compare the margins of error to what you saw at county level. What does that imply about the resolution at which you can actually trust ACS data?\n\nIf you try one, add a short section describing what you did and what you found.\n\n\n\n\n\nBefore you submit\n\n\n\n\n\n\nNoteDelete this box — checklist\n\n\n\n\nYour name is in the YAML header\nEvery instruction callout is deleted\nEvery [bracketed prompt] is replaced with your own writing\nNo ___ blanks remain anywhere\nThe file is at assignments/assignment2.qmd\nSession → Restart R, then render the whole project. It works.\nCommitted and pushed\nYou opened your live site and looked at the published page"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#what-this-means-for-policy",
+    "href": "assignments/assignment2 .html#what-this-means-for-policy",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "What this means for policy",
+    "text": "What this means for policy\n\n\n\n\n\n\nImportantInstructions — delete this box\n\n\n\nWrite 200–250 words.\nAddress all three:\n\nWhich communities in your state do we know the least about? Name specific counties from your results.\nWhy? Connect the pattern to how the ACS actually works — it’s a sample, and smaller places yield smaller samples.\nWhat could go wrong? Imagine a state agency allocating funding using your variable, treating every county’s number as equally certain. Who is likely to be hurt, and how?\n\nUse your own numbers.\n\n\n[Your 200–250 word reflection goes here.]"
+  },
+  {
+    "objectID": "assignments/assignment2 .html#optional-challenges---for-those-craving-more",
+    "href": "assignments/assignment2 .html#optional-challenges---for-those-craving-more",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Optional challenges - For those craving more",
+    "text": "Optional challenges - For those craving more\n\n\n\n\n\n\nNoteDelete this box\n\n\n\nNone of these are graded. There are no extra points. A complete, well-written assignment earns a 2 either way.\nThey’re here for anyone who finished the above and found it straightforward. Pick one (or more) that interests you.\n\nPropagate the margin of error. If you compute a derived value — a percentage, a ratio, a sum — its uncertainty depends on the uncertainty of its inputs, and you can’t just carry the original MOE along. The Census Bureau publishes formulas for this, and tidycensus implements them: moe_sum(), moe_prop(), moe_ratio(). Compute something derived, and get its margin of error right.\nParameterize the report. Add params: to the YAML so the state is an input rather than hard-coded, and the same file regenerates for any state. Render it from the terminal with quarto render assignment2.qmd -P state:NY.\nWrite a function and iterate. Wrap the data pull in a function, then use purrr::map_dfr() to run it across several states at once. Does the small-places-are-noisier pattern hold everywhere, or are some states different?\nChange the geographic scale. Run the same variable at geography = \"tract\" inside one county. Compare the margins of error to what you saw at county level. What does that imply about the resolution at which you can actually trust ACS data?\n\nIf you try one, add a short section describing what you did and what you found."
+  },
+  {
+    "objectID": "assignments/assignment2 .html#before-you-submit",
+    "href": "assignments/assignment2 .html#before-you-submit",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Before you submit",
+    "text": "Before you submit\n\n\n\n\n\n\nNoteDelete this box — checklist\n\n\n\n\nYour name is in the YAML header\nEvery instruction callout is deleted\nEvery [bracketed prompt] is replaced with your own writing\nNo ___ blanks remain anywhere\nThe file is at assignments/assignment2.qmd\nSession → Restart R, then render the whole project. It works.\nCommitted and pushed\nYou opened your live site and looked at the published page"
+  },
+  {
+    "objectID": "assignments/assignment2.html",
+    "href": "assignments/assignment2.html",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(tidycensus)"
+  },
+  {
+    "objectID": "assignments/assignment2.html#setup",
+    "href": "assignments/assignment2.html#setup",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(tidycensus)"
+  },
+  {
+    "objectID": "assignments/assignment2.html#the-question",
+    "href": "assignments/assignment2.html#the-question",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "The question",
+    "text": "The question\nEvery number the American Community Survey publishes is an estimate drawn from a sample, not a count. That means every number comes with a margin of error — a statement about how wrong it might be.\nMost people ignore it. In this assignment, you won’t.\nIn this analysis, I look at median age across counties in California, and ask which communities we measure most and least reliably."
+  },
+  {
+    "objectID": "assignments/assignment2.html#choosing-what-to-measure",
+    "href": "assignments/assignment2.html#choosing-what-to-measure",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Choosing what to measure",
+    "text": "Choosing what to measure\n\nmy_state &lt;- \"CA\"        # two-letter abbreviation, in quotes\nmy_variable &lt;- \"B01002_001\"     # the variable code, in quotes"
+  },
+  {
+    "objectID": "assignments/assignment2.html#pulling-the-data",
+    "href": "assignments/assignment2.html#pulling-the-data",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Pulling the data",
+    "text": "Pulling the data\n\ncounty_data &lt;- get_acs(\n  geography = \"county\",\n  variables = my_variable,\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\"\n)\n\nLet’s look at what came back.\n\ndim(county_data)\n\n[1] 58  5\n\nhead(county_data)\n\n# A tibble: 6 × 5\n  GEOID NAME                         variable   estimate   moe\n  &lt;chr&gt; &lt;chr&gt;                        &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;\n1 06001 Alameda County, California   B01002_001     38.7   0.2\n2 06003 Alpine County, California    B01002_001     41.1   4.8\n3 06005 Amador County, California    B01002_001     49.9   0.6\n4 06007 Butte County, California     B01002_001     36.3   0.2\n5 06009 Calaveras County, California B01002_001     52     0.7\n6 06011 Colusa County, California    B01002_001     35.7   0.9\n\n\n[How many rows did you get? Does that match the number of counties in your state?]\nI get 58 counties and it does matches."
+  },
+  {
+    "objectID": "assignments/assignment2.html#how-big-is-the-margin-of-error",
+    "href": "assignments/assignment2.html#how-big-is-the-margin-of-error",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "How big is the margin of error?",
+    "text": "How big is the margin of error?\nA margin of error of 3,000 means something very different for an estimate of 20,000 than for an estimate of 200,000. To compare across places, we need it as a percentage.\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(moe_pct = moe / estimate * 100)\n\nNow sort to see which counties are measured least reliably.\n\ncounty_data %&gt;%\n  arrange(desc(moe_pct)) %&gt;%\n  select(NAME, estimate, moe, moe_pct) %&gt;%\n  head(10)\n\n# A tibble: 10 × 4\n   NAME                         estimate   moe moe_pct\n   &lt;chr&gt;                           &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;\n 1 Alpine County, California        41.1   4.8   11.7 \n 2 Sierra County, California        56     5      8.93\n 3 Mono County, California          40.3   1.8    4.47\n 4 Modoc County, California         49     2.1    4.29\n 5 Colusa County, California        35.7   0.9    2.52\n 6 Del Norte County, California     40.8   0.9    2.21\n 7 Mariposa County, California      51.6   1      1.94\n 8 Trinity County, California       54.8   0.9    1.64\n 9 Lassen County, California        37.8   0.6    1.59\n10 Plumas County, California        52.1   0.8    1.54\n\n\n[Which county has the largest margin of error relative to its estimate? How large is it?]\nAlpine County, at about 11.68%"
+  },
+  {
+    "objectID": "assignments/assignment2.html#sorting-counties-into-reliability-categories",
+    "href": "assignments/assignment2.html#sorting-counties-into-reliability-categories",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Sorting counties into reliability categories",
+    "text": "Sorting counties into reliability categories\nI use relative MOE cutoffs of 0.5% and 1% because the default cutoffs place most counties in the same category for median age. These stricter cutoffs help distinguish relative precision across counties; they are categories for this analysis, not official reliability standards. I use the same cutoffs throughout the analysis.\n\ncounty_data &lt;- county_data %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 0.5  ~ \"High confidence\",\n    moe_pct &lt; 1 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\ncount(county_data, reliability)\n\n# A tibble: 3 × 2\n  reliability         n\n  &lt;chr&gt;           &lt;int&gt;\n1 High confidence    16\n2 Low confidence     16\n3 Moderate           26\n\n\n[How many counties fall into each category?]\n16 in High confidence, 16 in Low confidence, and 26 in moderate."
+  },
+  {
+    "objectID": "assignments/assignment2.html#is-the-margin-of-error-bigger-in-small-places",
+    "href": "assignments/assignment2.html#is-the-margin-of-error-bigger-in-small-places",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Is the margin of error bigger in small places?",
+    "text": "Is the margin of error bigger in small places?\nTo answer this we need population and our variable side by side, in the same row. That means a wide pull.\n\ncounty_wide &lt;- get_acs(\n  geography = \"county\",\n  variables = c(myvar = my_variable,\n                pop   = \"B01003_001\"),\n  state = my_state,\n  year = 2023,\n  survey = \"acs5\",\n  output = \"wide\"\n)\n\nhead(county_wide)\n\n# A tibble: 6 × 6\n  GEOID NAME                         myvarE myvarM    popE  popM\n  &lt;chr&gt; &lt;chr&gt;                         &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;\n1 06001 Alameda County, California     38.7    0.2 1651949    NA\n2 06003 Alpine County, California      41.1    4.8    1695   234\n3 06005 Amador County, California      49.9    0.6   41029    NA\n4 06007 Butte County, California       36.3    0.2  209470    NA\n5 06009 Calaveras County, California   52      0.7   45995    NA\n6 06011 Colusa County, California      35.7    0.9   21895    NA\n\n\n\ncounty_wide &lt;- county_wide %&gt;%\n  mutate(moe_pct = myvarM / myvarE * 100) %&gt;%\n  mutate(reliability = case_when(\n    moe_pct &lt; 0.5  ~ \"High confidence\",\n    moe_pct &lt; 1 ~ \"Moderate\",\n    TRUE         ~ \"Low confidence\"\n  ))\n\nNow compare the average population of counties in each reliability category.\n\ncounty_wide %&gt;%\n  group_by(reliability) %&gt;%\n  summarize(\n    n_counties = n(),\n    avg_population = mean(popE)\n  )\n\n# A tibble: 3 × 3\n  reliability     n_counties avg_population\n  &lt;chr&gt;                &lt;int&gt;          &lt;dbl&gt;\n1 High confidence         16       1711758.\n2 Low confidence          16         25185.\n3 Moderate                26        440450.\n\n\n[What is the average population of high-confidence counties versus low-confidence counties? Is there a pattern?]\nThe 16 high-confidence counties have an average population of 1,711,758.31, compared with 25,185.19 for the 16 low-confidence counties. The 26 moderate-confidence counties have an average population of 440,449.58. This pattern suggests that smaller counties tend to have less precise median age estimates in this analysis, although the comparison alone does not establish causation."
+  },
+  {
+    "objectID": "assignments/assignment2.html#what-this-means-for-policy",
+    "href": "assignments/assignment2.html#what-this-means-for-policy",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "What this means for policy",
+    "text": "What this means for policy\n[Your 200–250 word reflection goes here.]\nAmong California counties, Alpine and Sierra have the greatest relative uncertainty in their median age estimates. Alpine County has an estimated median age of 41.1 years and a margin of error (MoE) of 4.8 years (11.68% of the estimate). Sierra County has an estimated median age of 56 years and a MoE of 5 years (8.93%). Both are measured less precisely than other counties.\nUsing relative MOE cutoffs of 0.5% and 1%, the 16 high-confidence counties average roughly 1,711,758 residents, compared with 25,185 for the 16 low-confidence counties. The 26 moderate-confidence counties average 440,450. This pattern reflects how the ACS works: it surveys a sample of residents, and smaller counties yield fewer observations, so their estimates carry more uncertainty.\nSuppose a state agency used median age to prioritize funding for older-adult services. An underestimated median age might cause a county to miss support; an overestimate might divert funding from communities that need it. Alpine and Sierra would be especially exposed to such errors. Agencies should weigh MoE alongside point estimates — and recognize that median age alone does not capture the number of older residents who need services."
+  },
+  {
+    "objectID": "assignments/assignment2.html#optional-challenges---for-those-craving-more",
+    "href": "assignments/assignment2.html#optional-challenges---for-those-craving-more",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Optional challenges - For those craving more",
+    "text": "Optional challenges - For those craving more\nUsing 2023 ACS five-year estimates, I compared the precision of median age estimates for Los Angeles County and its census tracts. The county’s relative MOE was 0.26%, while the median relative MOE across 2,477 valid tracts was 10.12%. Another 21 tracts were excluded for missing estimates.\nWith reliability thresholds at 5% and 10%, 181 tracts (7.31%) fell into high confidence, 1,037 (41.87%) into moderate, and 1,259 (50.83%) into low confidence.\nA precise county estimate does not guarantee equally precise estimates at the tract level. Smaller areas yield fewer survey observations and more uncertainty. Agencies directing older-adult services to specific neighborhoods should check tract-level MOEs rather than relying on county precision alone."
+  },
+  {
+    "objectID": "assignments/assignment2.html#before-you-submit",
+    "href": "assignments/assignment2.html#before-you-submit",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Before you submit",
+    "text": "Before you submit"
+  },
+  {
+    "objectID": "assignments/assignment2.html#suppose-a-state-agency-used-median-age-to-prioritize-funding-for-older-adult-services.-an-underestimated-median-age-might-cause-a-county-to-miss-support-an-overestimate-might-divert-funding-from-communities-that-need-it.-alpine-and-sierra-would-be-especially-exposed-to-such-errors.-agencies-should-weigh-moe-alongside-point-estimates-and-recognize-that-median-age-alone-does-not-capture-the-number-of-older-residents-who-need-services.",
+    "href": "assignments/assignment2.html#suppose-a-state-agency-used-median-age-to-prioritize-funding-for-older-adult-services.-an-underestimated-median-age-might-cause-a-county-to-miss-support-an-overestimate-might-divert-funding-from-communities-that-need-it.-alpine-and-sierra-would-be-especially-exposed-to-such-errors.-agencies-should-weigh-moe-alongside-point-estimates-and-recognize-that-median-age-alone-does-not-capture-the-number-of-older-residents-who-need-services.",
+    "title": "Assignment 2: Who Do We Know the Least About?",
+    "section": "Suppose a state agency used median age to prioritize funding for older-adult services. An underestimated median age might cause a county to miss support; an overestimate might divert funding from communities that need it. Alpine and Sierra would be especially exposed to such errors. Agencies should weigh MoE alongside point estimates — and recognize that median age alone does not capture the number of older residents who need services.",
+    "text": "Suppose a state agency used median age to prioritize funding for older-adult services. An underestimated median age might cause a county to miss support; an overestimate might divert funding from communities that need it. Alpine and Sierra would be especially exposed to such errors. Agencies should weigh MoE alongside point estimates — and recognize that median age alone does not capture the number of older residents who need services."
   }
 ]

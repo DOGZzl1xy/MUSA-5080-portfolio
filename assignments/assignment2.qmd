@@ -1,0 +1,204 @@
+---
+title: "Assignment 2: Who Do We Know the Least About?"
+subtitle: "Measuring uncertainty in American Community Survey data"
+author: "Xuanyu Zhou"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: false
+execute:
+  warning: false
+  message: false
+---
+
+
+## Setup
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
+
+---
+
+## The question
+
+Every number the American Community Survey publishes is an estimate drawn from a
+sample, not a count. That means every number comes with a margin of error — a
+statement about how wrong it might be.
+
+Most people ignore it. In this assignment, you won't.
+
+
+**In this analysis, I look at median age across counties in California, and
+ask which communities we measure most and least reliably.**
+
+---
+
+## Choosing what to measure
+
+
+
+```{r}
+my_state <- "CA"        # two-letter abbreviation, in quotes
+my_variable <- "B01002_001"     # the variable code, in quotes
+```
+
+## Pulling the data
+
+```{r}
+county_data <- get_acs(
+  geography = "county",
+  variables = my_variable,
+  state = my_state,
+  year = 2023,
+  survey = "acs5"
+)
+```
+
+Let's look at what came back.
+
+```{r}
+dim(county_data)
+head(county_data)
+```
+
+
+
+**[How many rows did you get? Does that match the number of counties in your state?]**
+
+I get 58 counties and it does matches. 
+
+--- 
+
+## How big is the margin of error?
+
+A margin of error of 3,000 means something very different for an estimate of 20,000
+than for an estimate of 200,000. To compare across places, we need it as a
+percentage.
+
+```{r}
+county_data <- county_data %>%
+  mutate(moe_pct = moe / estimate * 100)
+```
+
+Now sort to see which counties are measured least reliably.
+
+```{r}
+county_data %>%
+  arrange(desc(moe_pct)) %>%
+  select(NAME, estimate, moe, moe_pct) %>%
+  head(10)
+```
+
+
+
+**[Which county has the largest margin of error relative to its estimate? How large
+is it?]**
+
+Alpine County, at about 11.68%
+
+---
+
+## Sorting counties into reliability categories
+
+I use relative MOE cutoffs of 0.5% and 1% because the default cutoffs place most counties in the same category for median age. These stricter cutoffs help distinguish relative precision across counties; they are categories for this analysis, not official reliability standards. I use the same cutoffs throughout the analysis.
+
+```{r}
+county_data <- county_data %>%
+  mutate(reliability = case_when(
+    moe_pct < 0.5  ~ "High confidence",
+    moe_pct < 1 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+
+count(county_data, reliability)
+```
+
+
+
+**[How many counties fall into each category?]**
+
+16 in High confidence, 16 in Low confidence, and 26 in moderate. 
+
+---
+
+## Is the margin of error bigger in small places?
+
+To answer this we need population and our variable side by side, in the same row.
+That means a **wide** pull.
+
+```{r}
+county_wide <- get_acs(
+  geography = "county",
+  variables = c(myvar = my_variable,
+                pop   = "B01003_001"),
+  state = my_state,
+  year = 2023,
+  survey = "acs5",
+  output = "wide"
+)
+
+head(county_wide)
+```
+
+
+
+```{r}
+county_wide <- county_wide %>%
+  mutate(moe_pct = myvarM / myvarE * 100) %>%
+  mutate(reliability = case_when(
+    moe_pct < 0.5  ~ "High confidence",
+    moe_pct < 1 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+```
+
+Now compare the average population of counties in each reliability category.
+
+```{r}
+county_wide %>%
+  group_by(reliability) %>%
+  summarize(
+    n_counties = n(),
+    avg_population = mean(popE)
+  )
+```
+
+
+
+**[What is the average population of high-confidence counties versus low-confidence
+counties? Is there a pattern?]**
+
+The 16 high-confidence counties have an average population of 1,711,758.31, compared with 25,185.19 for the 16 low-confidence counties. The 26 moderate-confidence counties have an average population of 440,449.58. This pattern suggests that smaller counties tend to have less precise median age estimates in this analysis, although the comparison alone does not establish causation.
+
+---
+
+## What this means for policy
+
+
+**[Your 200–250 word reflection goes here.]**
+
+Among California counties, Alpine and Sierra have the greatest relative uncertainty in their median age estimates. Alpine County has an estimated median age of 41.1 years and a margin of error (MoE) of 4.8 years (11.68% of the estimate). Sierra County has an estimated median age of 56 years and a MoE of 5 years (8.93%). Both are measured less precisely than other counties.
+
+Using relative MOE cutoffs of 0.5% and 1%, the 16 high-confidence counties average roughly 1,711,758 residents, compared with 25,185 for the 16 low-confidence counties. The 26 moderate-confidence counties average 440,450. This pattern reflects how the ACS works: it surveys a sample of residents, and smaller counties yield fewer observations, so their estimates carry more uncertainty. 
+
+Suppose a state agency used median age to prioritize funding for older-adult services. An underestimated median age might cause a county to miss support; an overestimate might divert funding from communities that need it. Alpine and Sierra would be especially exposed to such errors. Agencies should weigh MoE alongside point estimates — and recognize that median age alone does not capture the number of older residents who need services.
+
+
+---
+
+## Optional challenges - For those craving more
+
+Using 2023 ACS five-year estimates, I compared the precision of median age estimates for Los Angeles County and its census tracts. The county's relative MOE was 0.26%, while the median relative MOE across 2,477 valid tracts was 10.12%. Another 21 tracts were excluded for missing estimates.
+
+With reliability thresholds at 5% and 10%, 181 tracts (7.31%) fell into high confidence, 1,037 (41.87%) into moderate, and 1,259 (50.83%) into low confidence. 
+
+A precise county estimate does not guarantee equally precise estimates at the tract level. Smaller areas yield fewer survey observations and more uncertainty. Agencies directing older-adult services to specific neighborhoods should check tract-level MOEs rather than relying on county precision alone.
+
+---
+
+## Before you submit
+
+
