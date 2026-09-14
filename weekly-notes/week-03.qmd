@@ -1,0 +1,149 @@
+---
+title: "Week 3: Visulaization"
+description: "Visualization · exploratory data analysis · joins"
+date: 2026-09-11
+---
+
+## What We Did
+
+- Quiz
+- Examined Anscombe’s Quartet and compared summary statistics across four datasets.
+- Learned how to build plots using ggplot(), aes(), and geom_*().
+- Reviewed uncertainty in ACS estimates using margin of error (MOE), standard error (SE), and coefficient of variation (CV).
+- Calculated uncertainty for derived estimates and changes over time.
+- GO HOME!
+
+## Key Concepts
+
+### Anscombe’s Quartet
+
+The four datasets have the same or nearly identical mean x, mean y, correlation, and regression line, but very different distributions when plotted.
+
+### How to Build a ggplot
+
+#### Step 1: Assign an object and create a blank canvas
+```R
+p <- ggplot(data)
+
+# You can also start without specifying data
+p <- ggplot()
+```
+
+#### Step 2: Define aesthetic mappings
+aes() maps data to visual properties such as position and color.
+
+- Inside aes(): map a variable or category to a visual property.
+- Outside aes(): set a visual property to a fixed value.
+
+```R
+# Map the category "blue" to color.
+# This creates a legend labeled "blue";
+# it does not necessarily make the points blue.
+ggplot(county_data) +
+  aes(x = estimate, y = moe_pct, color = "blue") +
+  geom_point()
+
+# Set all points to blue
+ggplot(county_data) +
+  aes(x = estimate, y = moe_pct) +
+  geom_point(color = "blue")
+
+# Color points according to the city variable
+ggplot(df, aes(x = income, y = rent)) +
+  geom_point(aes(color = city))
+```
+
+
+#### Step 3: Choose a geometry
+
+| Function | Purpose |
+| --- | --- |
+| `geom_histogram()` | Show the distribution of a variable |
+| `geom_point()` | Show the relationship between two variables |
+| `geom_boxplot()` | Compare distributions across groups |
+| `geom_col()` | Compare values across groups |
+| `geom_line()` | Show changes over time |
+| `geom_errorbar()` | Display uncertainty |
+
+```R
+p <- ggplot(df, aes(x = income, y = rent, color = city)) +
+  geom_point()
+```
+The + operator adds layers or other plot components.
+
+### ACS Error and Reliability
+#### Standard Error (SE)
+For an ACS margin of error reported at the 90% confidence level:
+
+$$
+SE = \frac{MOE}{1.645}
+$$
+
+#### Coefficient of Variation (CV)
+
+$$
+CV = \frac{SE}{\text{Estimate}} \times 100%
+$$
+
+CV thresholds from the class notes:
+
+| CV Level | Range | Interpretation |
+| --- | --- | --- |
+| Low | < 15% | High reliability |
+| Medium | 15%–30% | |
+| High | > 30% | High sampling error |
+
+
+#### Uncertainty in Derived Estimates
+
+When calculating sums, proportions, or ratios, account for uncertainty in the original estimates. Both the numerator and denominator may have sampling error.
+
+| Function | Purpose | Example |
+| --- | --- | --- |
+| `moe_sum()` | Calculate the MOE of a sum | Add populations across several areas |
+| `moe_prop()` | Calculate the MOE of a part-to-whole proportion | Population in poverty ÷ population for whom poverty status is determined |
+| `moe_ratio()` | Calculate the MOE of a general ratio | Number of jobs ÷ number of housing units |
+
+#### Changes Over Time
+
+When comparing ACS multiyear estimates, use periods with non-overlapping years.
+
+Convert each period’s MOE to its standard error:
+
+$$
+SE_1 = \frac{MOE_1}{1.645},
+\qquad
+SE_2 = \frac{MOE_2}{1.645}
+$$
+
+Assuming the two estimates are independent, the standard error of the difference is:
+
+$$
+SE_{\text{diff}} = \sqrt{SE_1^2 + SE_2^2}
+$$
+
+Define the difference as:
+
+$$
+\text{Difference} = \text{Estimate}_1 - \text{Estimate}_2
+$$
+
+The Z-score is:
+
+$$
+Z = \frac{\text{Estimate}_1 - \text{Estimate}2}{SE{\text{diff}}}
+$$
+
+The 90% confidence interval for the change is:
+
+$$
+\text{Difference} \pm 1.645 \times SE_{\text{diff}}
+$$
+
+
+
+
+## Reflection
+
+
+## Questions I Still Have

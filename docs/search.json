@@ -46,7 +46,7 @@
     "href": "weekly-notes/index.html",
     "title": "Weekly Notes",
     "section": "",
-    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 2: dplyr and Census Data\n\n\ntable function and acs data.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 3: Visulaization\n\n\nVisualization · exploratory data analysis · joins\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: dplyr and Census Data\n\n\ntable function and acs data.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "about.html",
@@ -320,5 +320,40 @@
     "title": "Assignment 2: Who Do We Know the Least About?",
     "section": "Suppose a state agency used median age to prioritize funding for older-adult services. An underestimated median age might cause a county to miss support; an overestimate might divert funding from communities that need it. Alpine and Sierra would be especially exposed to such errors. Agencies should weigh MoE alongside point estimates — and recognize that median age alone does not capture the number of older residents who need services.",
     "text": "Suppose a state agency used median age to prioritize funding for older-adult services. An underestimated median age might cause a county to miss support; an overestimate might divert funding from communities that need it. Alpine and Sierra would be especially exposed to such errors. Agencies should weigh MoE alongside point estimates — and recognize that median age alone does not capture the number of older residents who need services."
+  },
+  {
+    "objectID": "weekly-notes/week-03.html",
+    "href": "weekly-notes/week-03.html",
+    "title": "Week 3: Visulaization",
+    "section": "",
+    "text": "Quiz\nExamined Anscombe’s Quartet and compared summary statistics across four datasets.\nLearned how to build plots using ggplot(), aes(), and geom_*().\nReviewed uncertainty in ACS estimates using margin of error (MOE), standard error (SE), and coefficient of variation (CV).\nCalculated uncertainty for derived estimates and changes over time.\nGO HOME!"
+  },
+  {
+    "objectID": "weekly-notes/week-03.html#what-we-did",
+    "href": "weekly-notes/week-03.html#what-we-did",
+    "title": "Week 3: Visulaization",
+    "section": "",
+    "text": "Quiz\nExamined Anscombe’s Quartet and compared summary statistics across four datasets.\nLearned how to build plots using ggplot(), aes(), and geom_*().\nReviewed uncertainty in ACS estimates using margin of error (MOE), standard error (SE), and coefficient of variation (CV).\nCalculated uncertainty for derived estimates and changes over time.\nGO HOME!"
+  },
+  {
+    "objectID": "weekly-notes/week-03.html#key-concepts",
+    "href": "weekly-notes/week-03.html#key-concepts",
+    "title": "Week 3: Visulaization",
+    "section": "Key Concepts",
+    "text": "Key Concepts\n\nAnscombe’s Quartet\nThe four datasets have the same or nearly identical mean x, mean y, correlation, and regression line, but very different distributions when plotted.\n\n\nHow to Build a ggplot\n\nStep 1: Assign an object and create a blank canvas\np &lt;- ggplot(data)\n\n# You can also start without specifying data\np &lt;- ggplot()\n\n\nStep 2: Define aesthetic mappings\naes() maps data to visual properties such as position and color.\n\nInside aes(): map a variable or category to a visual property.\nOutside aes(): set a visual property to a fixed value.\n\n# Map the category \"blue\" to color.\n# This creates a legend labeled \"blue\";\n# it does not necessarily make the points blue.\nggplot(county_data) +\n  aes(x = estimate, y = moe_pct, color = \"blue\") +\n  geom_point()\n\n# Set all points to blue\nggplot(county_data) +\n  aes(x = estimate, y = moe_pct) +\n  geom_point(color = \"blue\")\n\n# Color points according to the city variable\nggplot(df, aes(x = income, y = rent)) +\n  geom_point(aes(color = city))\n\n\nStep 3: Choose a geometry\n\n\n\nFunction\nPurpose\n\n\n\n\ngeom_histogram()\nShow the distribution of a variable\n\n\ngeom_point()\nShow the relationship between two variables\n\n\ngeom_boxplot()\nCompare distributions across groups\n\n\ngeom_col()\nCompare values across groups\n\n\ngeom_line()\nShow changes over time\n\n\ngeom_errorbar()\nDisplay uncertainty\n\n\n\np &lt;- ggplot(df, aes(x = income, y = rent, color = city)) +\n  geom_point()\nThe + operator adds layers or other plot components.\n\n\n\nACS Error and Reliability\n\nStandard Error (SE)\nFor an ACS margin of error reported at the 90% confidence level:\n\\[\nSE = \\frac{MOE}{1.645}\n\\]\n\n\nCoefficient of Variation (CV)\n\\[\nCV = \\frac{SE}{\\text{Estimate}} \\times 100%\n\\]\nCV thresholds from the class notes:\n\n\n\nCV Level\nRange\nInterpretation\n\n\n\n\nLow\n&lt; 15%\nHigh reliability\n\n\nMedium\n15%–30%\n\n\n\nHigh\n&gt; 30%\nHigh sampling error\n\n\n\n\n\nUncertainty in Derived Estimates\nWhen calculating sums, proportions, or ratios, account for uncertainty in the original estimates. Both the numerator and denominator may have sampling error.\n\n\n\n\n\n\n\n\nFunction\nPurpose\nExample\n\n\n\n\nmoe_sum()\nCalculate the MOE of a sum\nAdd populations across several areas\n\n\nmoe_prop()\nCalculate the MOE of a part-to-whole proportion\nPopulation in poverty ÷ population for whom poverty status is determined\n\n\nmoe_ratio()\nCalculate the MOE of a general ratio\nNumber of jobs ÷ number of housing units\n\n\n\n\n\nChanges Over Time\nWhen comparing ACS multiyear estimates, use periods with non-overlapping years.\nConvert each period’s MOE to its standard error:\n\\[\nSE_1 = \\frac{MOE_1}{1.645},\n\\qquad\nSE_2 = \\frac{MOE_2}{1.645}\n\\]\nAssuming the two estimates are independent, the standard error of the difference is:\n\\[\nSE_{\\text{diff}} = \\sqrt{SE_1^2 + SE_2^2}\n\\]\nDefine the difference as:\n\\[\n\\text{Difference} = \\text{Estimate}_1 - \\text{Estimate}_2\n\\]\nThe Z-score is:\n\\[\nZ = \\frac{\\text{Estimate}_1 - \\text{Estimate}2}{SE{\\text{diff}}}\n\\]\nThe 90% confidence interval for the change is:\n\\[\n\\text{Difference} \\pm 1.645 \\times SE_{\\text{diff}}\n\\]"
+  },
+  {
+    "objectID": "weekly-notes/week-03.html#reflection",
+    "href": "weekly-notes/week-03.html#reflection",
+    "title": "Week 3: Visulaization",
+    "section": "Reflection",
+    "text": "Reflection"
+  },
+  {
+    "objectID": "weekly-notes/week-03.html#questions-i-still-have",
+    "href": "weekly-notes/week-03.html#questions-i-still-have",
+    "title": "Week 3: Visulaization",
+    "section": "Questions I Still Have",
+    "text": "Questions I Still Have"
   }
 ]

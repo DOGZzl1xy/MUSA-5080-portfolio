@@ -1,0 +1,12 @@
+---
+title: "Verify the Claim: [your article's topic]"
+author: "Xuanyu Zhou"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+---
+
