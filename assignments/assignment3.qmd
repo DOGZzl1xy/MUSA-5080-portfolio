@@ -1,5 +1,5 @@
 ---
-title: "Verify the Claim: [your article's topic]"
+title: "Verify the Claim: Did Philadelphia’s Poverty Rate Change Significantly?"
 author: "Xuanyu Zhou"
 date: today
 format:
@@ -10,3 +10,296 @@ format:
     embed-resources: true
 ---
 
+# Reconstruct
+
+Read the [origin report](https://whyy.org/articles/new-census-figures-on-philly-neighborhoods-show-inequality-high-numbers-of-whites-living-in-poverty/).
+
+I examine whether poverty rates in Philadelphia changed significantly between the 2006–2010 and 2013–2017 ACS five-year periods. I use census tract estimates from Census Bureau Table B17001, “Poverty Status in the Past 12 Months by Sex by Age.” Specifically, I use the population for whom poverty status is determined (B17001_001) as the denominator and the population below the poverty level (B17001_002) as the numerator. The two periods do not overlap.
+
+The following hypothesis is made: 
+
+$\text{H}_0$: The poverty rate in tracts of Philadelphia is not changed from 2010 to 2017.
+
+```{R}
+library(tidycensus)
+library(dplyr)
+library(tidyverse)
+library(sf)
+library(gt)
+
+# H0: The poverty rate in tracts of Philadelphia is not changed from 2010 to 2017.
+
+acs_list <- c("B17001_001", "B17001_002")
+
+format_poverty <- function(df){
+  df %>%
+  mutate(
+    variable = recode(
+      variable,
+      "B17001_001" = "Total Population",
+      "B17001_002" = "Population in Poverty"
+    )
+  )%>%
+    pivot_wider(
+      id_cols = c(GEOID, NAME),
+      names_from = variable,
+      values_from = c(estimate, moe),
+      names_glue = "{variable}_{.value}",
+      names_vary = "slowest"
+    )
+}
+
+poverty_2010 <- get_acs(
+  geography = "tract",
+  variables = acs_list,
+  state = "PA",
+  county = "Philadelphia",
+  year = 2010,
+  survey = "acs5"
+) %>%
+  format_poverty()
+
+poverty_2017 <- get_acs(
+  geography = "tract",
+  variables = acs_list,
+  state = "PA",
+  county = "Philadelphia",
+  year = 2017,
+  survey = "acs5"
+) %>%
+  format_poverty()
+```
+
+# Test
+
+## Code
+
+The following code provide info for later discussion. 
+
+```{R}
+poverty <- poverty_2010 %>%
+  inner_join(
+    poverty_2017,
+    by = c("GEOID", "NAME"),
+    suffix = c("_2010", "_2017")
+  )
+
+
+poverty_withrate <- poverty %>%
+  mutate(
+    poverty_rate_2010 =
+      `Population in Poverty_estimate_2010` /
+      na_if(`Total Population_estimate_2010`, 0),
+
+    poverty_rate_moe_2010 = tidycensus::moe_prop(
+      num = `Population in Poverty_estimate_2010`,
+      denom = na_if(`Total Population_estimate_2010`, 0),
+      moe_num = `Population in Poverty_moe_2010`,
+      moe_denom = `Total Population_moe_2010`
+    ),
+
+    poverty_rate_2017 =
+      `Population in Poverty_estimate_2017` /
+      na_if(`Total Population_estimate_2017`, 0),
+
+    poverty_rate_moe_2017 = tidycensus::moe_prop(
+      num = `Population in Poverty_estimate_2017`,
+      denom = na_if(`Total Population_estimate_2017`, 0),
+      moe_num = `Population in Poverty_moe_2017`,
+      moe_denom = `Total Population_moe_2017`
+    )
+  ) %>%
+  mutate(
+    cv_2010 = poverty_rate_moe_2010 / 1.645 / poverty_rate_2010 * 100,
+    cv_2017 = poverty_rate_moe_2017 / 1.645 / poverty_rate_2017 * 100
+  ) %>%
+  mutate(
+    delta_p = poverty_rate_2017 - poverty_rate_2010,
+    delta_moe = sqrt(poverty_rate_moe_2010^2 + poverty_rate_moe_2017^2)
+  ) %>%
+  mutate(
+    max_p = delta_p + delta_moe,
+    min_p = delta_p - delta_moe,
+    include_zero = ifelse(min_p <= 0 & max_p >= 0, TRUE, FALSE)
+  )
+```
+
+
+
+```{R}
+increase_top_15 <- filter(poverty_withrate) %>%
+  arrange(desc(delta_p)) %>%
+  slice_head(n = 15) %>%
+  mutate(NAME = str_remove(NAME, ", Philadelphia County, Pennsylvania"))
+
+decrease_top_15 <- filter(poverty_withrate) %>%
+  arrange(delta_p) %>%
+  slice_head(n = 15) %>%
+  mutate(NAME = str_remove(NAME, ", Philadelphia County, Pennsylvania"))
+
+
+ggplot(increase_top_15) +
+  geom_col(aes(x = reorder(NAME, delta_p), y = delta_p, fill = include_zero)) +
+  geom_errorbar(aes(x = reorder(NAME, delta_p), ymin = min_p, ymax = max_p), width = 0.3) +
+  coord_flip() +
+  labs(
+    x = "Census Tract",
+    y = "Increase in Poverty Rate (2010-2017)",
+    title = "Increase in Poverty Rate in Philadelphia Census Tracts (2010-2017)",
+    subtitle = "Top 15, error bars show 90% confidence intervals",
+    fill = "Includes Zero"
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed")+
+  scale_fill_manual(values = c("TRUE" = "lightblue", "FALSE" = "salmon")) +
+  theme_minimal()
+
+
+ggplot(decrease_top_15) +
+  geom_col(aes(x = reorder(NAME, delta_p), y = delta_p, fill = include_zero)) +
+  geom_errorbar(aes(x = reorder(NAME, delta_p), ymin = min_p, ymax = max_p), width = 0.3) +
+  coord_flip() +
+  labs(
+    x = "Census Tract",
+    y = "Decrease in Poverty Rate (2010-2017)",
+    title = "Decrease in Poverty Rate in Philadelphia Census Tracts (2010-2017)",
+    subtitle = "Top 15, error bars show 90% confidence intervals",
+    fill = "Includes Zero"
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed")+
+  scale_fill_manual(values = c("TRUE" = "lightblue", "FALSE" = "salmon")) +
+  theme_minimal()
+
+
+reliability_table <- poverty_withrate %>%
+  mutate(
+  dot_2010 = case_when(
+    is.na(cv_2010)       ~ "⚪",
+    is.infinite(cv_2010) ~ "⚪",
+    cv_2010 < 12  ~ "🟢",
+    cv_2010 <= 40 ~ "🟡",
+    TRUE           ~ "🔴"
+  ),
+  flag_2010 = case_when(
+    is.na(cv_2010)       ~ "Not available",
+    is.infinite(cv_2010) ~ "Undefined CV (zero estimate)",
+    cv_2010 < 12        ~ "Reliable",
+    cv_2010 <= 40       ~ "Somewhat reliable",
+    TRUE                ~ "Unreliable"
+  ),
+  dot_2017 = case_when(
+    is.na(cv_2017)       ~ "⚪",
+    is.infinite(cv_2017) ~ "⚪",
+    cv_2017 < 12  ~ "🟢",
+    cv_2017 <= 40 ~ "🟡",
+    TRUE           ~ "🔴"
+  ),
+  flag_2017 = case_when(
+    is.na(cv_2017)       ~ "Not available",
+    is.infinite(cv_2017) ~ "Undefined CV (zero estimate)",
+    cv_2017 < 12        ~ "Reliable",
+    cv_2017 <= 40       ~ "Somewhat reliable",
+    TRUE                ~ "Unreliable"
+  ),
+  NAME = str_remove(NAME, ", Philadelphia County, Pennsylvania")
+) %>%
+  arrange(NAME) %>%
+  select(NAME,dot_2010, poverty_rate_2010, poverty_rate_moe_2010, cv_2010, flag_2010,
+              dot_2017, poverty_rate_2017, poverty_rate_moe_2017, cv_2017, flag_2017)
+
+
+reliability_table %>%
+  gt() %>%
+  tab_header(
+    title = "Reliability of Poverty Rate Estimates in Philadelphia Census Tracts",
+    subtitle = "Reliability thresholds follow Jurjevich et al. (2018): CV < 12% = reliable; 12–40% = somewhat reliable; > 40% = unreliable."
+  ) %>%
+  cols_label(
+
+    NAME = "Census Tract",
+    dot_2010 = "",
+    poverty_rate_2010 = "Poverty Rate (2010)",
+    poverty_rate_moe_2010 = "MoE (2010)",
+    cv_2010 = "CV (2010)",
+    flag_2010 = "Reliability Flag",
+    dot_2017 = "",
+    poverty_rate_2017 = "Poverty Rate (2017)",
+    poverty_rate_moe_2017 = "MoE (2017)",
+    cv_2017 = "CV (2017)",
+    flag_2017 = "Reliability Flag"
+
+  ) %>%
+  fmt_percent(
+    columns = c(poverty_rate_2010, poverty_rate_2017),
+    decimals = 2
+  ) %>%
+  fmt_number(
+    columns = c(poverty_rate_moe_2010, cv_2010, poverty_rate_moe_2017, cv_2017),
+    decimals = 2
+  ) %>%
+  tab_options(
+    table.font.size = px(12)
+  )
+
+change_summary <- poverty_withrate %>%
+  mutate(
+    result = case_when(
+      is.na(include_zero) ~ "Not testable",
+      !include_zero & delta_p > 0 ~ "Significant Increase",
+      !include_zero & delta_p < 0 ~ "Significant Decrease",
+      TRUE ~ "Not Significant"
+    )
+  )%>%
+  count(result)
+
+ggplot(change_summary, aes(x = result, y = n, fill = result)) +
+  geom_col(width = 0.3) +
+  labs(
+    x = "Change Result",
+    y = "Number of Census Tracts",
+    title = "Summary of Poverty Rate Change in Philadelphia Census Tracts",
+  ) +
+  scale_fill_manual(values = c(
+    "Significant Increase" = "salmon",
+    "Significant Decrease" = "lightblue",
+    "Not Significant" = "gray",
+    "Not testable" = "yellow"
+  )) +
+  theme_minimal() +
+  coord_flip() +
+  geom_text(aes(label = n), hjust = 0) +
+  theme(legend.position = "none")
+```
+
+
+## About NA and zero-value
+
+I got 8 not testable census tracts due to several reasons. 
+
+| CT | GEOID | 2010 Total Population | 2017 Total Population | Reasons |
+|---|---|---:|---:|---|
+| 50 | 42101005000 | 0 | 0 | poverty rate for Both periods are undefined |
+| 9803 | 42101980300 | 0 | 0 | Poverty Rate for Both periods are undefined |
+| 9804 | 42101980400 | 0 | 0 | Poverty Rate for Both periods are undefined |
+| 9805 | 42101980500 | 0 | 0 | Poverty Rate for Both periods are undefined |
+| 9806 | 42101980600 | 92 | 0 | Poverty Rate for 2013-2017 is undefined |
+| 9807 | 42101980700 | 0 | 0 | Poverty Rate for Both periods are undefined |
+| 9808 | 42101980800 | 0 | 0 | Poverty Rate for Both periods are undefined |
+| 9809 | 42101980900 | 0 | 0 | Poverty Rate for Both periods are undefined |
+
+According to [Census Bureau](https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2023/TGRSHP2023_TechDoc_Ch4.pdf), code 9800s represent special land use area. After examining these tracts in Google Maps, I identified PHL international airport or industrial land uses in tracts 50, 9804, 9806, 9807, and 9809. Tract 9808 covers Cobbs Creek Park, tract 9805 covers Hunting Park, and tract 9803 covers Northeast Philadelphia Airport.
+
+## Findings
+
+Of the 376 testable census tracts, 36 showed statistically significant **increases** in poverty rates and 27 showed significant **decreases** at the 90% confidence level. The remaining 313 showed no statistically detectable change. Eight additional tracts were not testable because their poverty-universe population estimates were zero in at least one period.
+
+# Adjudicate
+
+**Supported**: My tract-level results provide support for the article’s account of rising poverty in some parts of Philadelphia. Comparing the nonoverlapping 2006–2010 and 2013–2017 ACS five-year estimates, 36 of the 376 testable tracts showed statistically significant increases in poverty rates at the 90% confidence level, while 27 showed significant decreases. Also, the neighborhood boundary of Eastwick is equal to the sum of CT 54, 55, 56, and 60. And I found the poverty rate is increased approximately from 11.6% to 25.8%, aligned with the report's number. 
+
+
+**Not Supported**: I did not identify any specific claim that my analysis directly contradicts.
+
+**Can not be determined**: Can not tell that Eastwick is the neighborhood that experience the most severe increase in poverty rate due to undefined neighborhood boundary. Also, the total population and its poverty rate cannot assess the article’s claims about white poverty or household-income inequality. 
+
+# Rewrite
+Philadelphia’s poverty rate edged up from 25.1% in 2006–2010 to 25.8% in 2013–2017, but statistically detectable increases were limited to a minority of the city’s census tracts. Of 376 tracts with usable data, 36 recorded significant increases, while 27 recorded significant decreases. The remaining 313, or 83%, showed no statistically detectable change. The modest citywide increase was statistically significant at the 90% confidence level, but it does not mean poverty rose throughout Philadelphia. These findings show a small overall increase alongside differing local trends. 
