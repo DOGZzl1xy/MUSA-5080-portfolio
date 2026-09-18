@@ -46,7 +46,7 @@
     "href": "weekly-notes/index.html",
     "title": "Weekly Notes",
     "section": "",
-    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 3: Visulaization\n\n\nVisualization · exploratory data analysis · joins\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: dplyr and Census Data\n\n\ntable function and acs data.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
+    "text": "Notes from each week of MUSA 5080. New entries appear here automatically — add a .qmd file to this folder and render.\n\n\n\n\n\n\n\n\n\n\n\nWeek 4: Go Spatial!\n\n\nData Joins, CRS, and Spatial Analysis in R\n\n\n\n\n\nSep 18, 2026\n\n\n\n\n\n\n\nWeek 3: Visulaization\n\n\nVisualization · exploratory data analysis · joins\n\n\n\n\n\nSep 11, 2026\n\n\n\n\n\n\n\nWeek 2: dplyr and Census Data\n\n\ntable function and acs data.\n\n\n\n\n\nSep 5, 2026\n\n\n\n\n\n\n\nWeek 1: Getting Set Up\n\n\nFirst impressions, and getting the workflow running.\n\n\n\n\n\nAug 28, 2026\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "about.html",
@@ -383,5 +383,40 @@
     "title": "Verify the Claim: Did Philadelphia’s Poverty Rate Change Significantly?",
     "section": "Findings",
     "text": "Findings\nOf the 376 testable census tracts, 36 showed statistically significant increases in poverty rates and 27 showed significant decreases at the 90% confidence level. The remaining 313 showed no statistically detectable change. Eight additional tracts were not testable because their poverty-universe population estimates were zero in at least one period."
+  },
+  {
+    "objectID": "weekly-notes/week-04.html",
+    "href": "weekly-notes/week-04.html",
+    "title": "Week 4: Go Spatial!",
+    "section": "",
+    "text": "Announcement\nQuiz\nLecture\nLab practice\nGO HOME!"
+  },
+  {
+    "objectID": "weekly-notes/week-04.html#what-we-did",
+    "href": "weekly-notes/week-04.html#what-we-did",
+    "title": "Week 4: Go Spatial!",
+    "section": "",
+    "text": "Announcement\nQuiz\nLecture\nLab practice\nGO HOME!"
+  },
+  {
+    "objectID": "weekly-notes/week-04.html#key-concepts",
+    "href": "weekly-notes/week-04.html#key-concepts",
+    "title": "Week 4: Go Spatial!",
+    "section": "Key Concepts",
+    "text": "Key Concepts\n\ntable join\n\ninner_join(): Keep matching records only.\nleft_join(): Keep all left-table records; unmatched values become NA.\nfull_join(): Keep all records from both tables.\n\n\n\nSpatial Data and CRS\n\nget_acs(..., geometry = TRUE): Return census data with spatial geometry.\nSticky geometry: Geometry stays attached during table operations; remove with st_drop_geometry().\nCRS: Defines how coordinates represent locations.\nGeographic CRS: Longitude and latitude, measured in degrees.\nProjected CRS: Planar coordinates, usually measured in meters or feet.\nNAD83: Common datum for North American data.\nWGS84: Global datum used by GPS.\n\n\n\nMap Projections\n\nTypes: Cylindrical, conic, and planar/azimuthal.\nConformal: Preserves local angles and shapes.\nEqual-area: Preserves area.\nEquidistant: Preserves distances along specific lines or from specific points.\nAzimuthal: Preserves directions from a central point.\nUTM: Uses 60 zones and meter-based coordinates, normally positive within the appropriate zone.\n\n\n\nEssential sf Functions\n\n\n\n\n\n\n\nFunction\nKey purpose\n\n\n\n\nst_crs(x)\nCheck the CRS\n\n\nst_set_crs(x, crs)\nAssign a CRS label without changing coordinates\n\n\nst_transform(x, crs)\nConvert coordinates to another CRS\n\n\nst_buffer(x, dist)\nCreate a buffer\n\n\nst_intersects(x, y)\nTest whether geometries share any location\n\n\nst_touches(x, y)\nTest whether geometries touch without interior overlap\n\n\nst_within(x, y)\nTest whether x lies within y\n\n\nst_filter(x, y)\nKeep features based on a spatial relationship\n\n\nst_union(x)\nMerge geometries and dissolve internal boundaries\n\n\nst_join(x, y)\nJoin attributes based on spatial relationships\n\n\nst_distance(x, y)\nCalculate distances between geometries"
+  },
+  {
+    "objectID": "weekly-notes/week-04.html#reflection",
+    "href": "weekly-notes/week-04.html#reflection",
+    "title": "Week 4: Go Spatial!",
+    "section": "Reflection",
+    "text": "Reflection"
+  },
+  {
+    "objectID": "weekly-notes/week-04.html#questions-i-still-have",
+    "href": "weekly-notes/week-04.html#questions-i-still-have",
+    "title": "Week 4: Go Spatial!",
+    "section": "Questions I Still Have",
+    "text": "Questions I Still Have"
   }
 ]

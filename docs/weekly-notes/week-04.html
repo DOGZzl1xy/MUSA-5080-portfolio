@@ -6,9 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Running notes from MUSA 5080.">
+<meta name="dcterms.date" content="2026-09-18">
+<meta name="description" content="Data Joins, CRS, and Spatial Analysis in R">
 
-<title>Weekly Notes – Xuanyu Zhou - MUSA 5080 Portfolio</title>
+<title>Week 4: Go Spatial! – Xuanyu Zhou - MUSA 5080 Portfolio</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -69,8 +70,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -108,65 +107,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-title','listing-date','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
@@ -196,7 +137,7 @@ window.Quarto = {
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="../weekly-notes/index.html" aria-current="page"> 
+    <a class="nav-link" href="../weekly-notes/index.html"> 
 <span class="menu-text">Weekly Notes</span></a>
   </li>  
   <li class="nav-item">
@@ -221,20 +162,35 @@ window.Quarto = {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-we-did" id="toc-what-we-did" class="nav-link active" data-scroll-target="#what-we-did">What We Did</a></li>
+  <li><a href="#key-concepts" id="toc-key-concepts" class="nav-link" data-scroll-target="#key-concepts">Key Concepts</a>
+  <ul class="collapse">
+  <li><a href="#table-join" id="toc-table-join" class="nav-link" data-scroll-target="#table-join">table join</a></li>
+  <li><a href="#spatial-data-and-crs" id="toc-spatial-data-and-crs" class="nav-link" data-scroll-target="#spatial-data-and-crs">Spatial Data and CRS</a></li>
+  <li><a href="#map-projections" id="toc-map-projections" class="nav-link" data-scroll-target="#map-projections">Map Projections</a></li>
+  <li><a href="#essential-sf-functions" id="toc-essential-sf-functions" class="nav-link" data-scroll-target="#essential-sf-functions">Essential <code>sf</code> Functions</a></li>
+  </ul></li>
+  <li><a href="#reflection" id="toc-reflection" class="nav-link" data-scroll-target="#reflection">Reflection</a></li>
+  <li><a href="#questions-i-still-have" id="toc-questions-i-still-have" class="nav-link" data-scroll-target="#questions-i-still-have">Questions I Still Have</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Weekly Notes</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title">Week 4: Go Spatial!</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
 <div>
   <div class="description">
-    Running notes from MUSA 5080.
+    Data Joins, CRS, and Spatial Analysis in R
   </div>
 </div>
 
@@ -242,6 +198,12 @@ window.Quarto = {
 <div class="quarto-title-meta">
 
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 18, 2026</p>
+    </div>
+  </div>
   
     
   </div>
@@ -251,86 +213,123 @@ window.Quarto = {
 </header>
 
 
-<p>Notes from each week of MUSA 5080. New entries appear here automatically — add a <code>.qmd</code> file to this folder and render.</p>
-
+<section id="what-we-did" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-did">What We Did</h2>
+<ul>
+<li>Announcement</li>
+<li>Quiz</li>
+<li>Lecture</li>
+<li>Lab practice</li>
+<li>GO HOME!</li>
+</ul>
+</section>
+<section id="key-concepts" class="level2">
+<h2 class="anchored" data-anchor-id="key-concepts">Key Concepts</h2>
+<section id="table-join" class="level3">
+<h3 class="anchored" data-anchor-id="table-join">table join</h3>
+<ul>
+<li><code>inner_join()</code>: Keep matching records only.</li>
+<li><code>left_join()</code>: Keep all left-table records; unmatched values become NA.</li>
+<li><code>full_join()</code>: Keep all records from both tables.</li>
+</ul>
+</section>
+<section id="spatial-data-and-crs" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-data-and-crs">Spatial Data and CRS</h3>
+<ul>
+<li><code>get_acs(..., geometry = TRUE)</code>: Return census data with spatial geometry.</li>
+<li>Sticky geometry: Geometry stays attached during table operations; remove with <code>st_drop_geometry()</code>.</li>
+<li>CRS: Defines how coordinates represent locations.</li>
+<li>Geographic CRS: Longitude and latitude, measured in degrees.</li>
+<li>Projected CRS: Planar coordinates, usually measured in meters or feet.</li>
+<li>NAD83: Common datum for North American data.</li>
+<li>WGS84: Global datum used by GPS.</li>
+</ul>
+</section>
+<section id="map-projections" class="level3">
+<h3 class="anchored" data-anchor-id="map-projections">Map Projections</h3>
+<ul>
+<li><strong>Types</strong>: Cylindrical, conic, and planar/azimuthal.</li>
+<li><strong>Conformal</strong>: Preserves local angles and shapes.</li>
+<li><strong>Equal-area</strong>: Preserves area.</li>
+<li><strong>Equidistant</strong>: Preserves distances along specific lines or from specific points.</li>
+<li><strong>Azimuthal</strong>: Preserves directions from a central point.</li>
+<li><strong>UTM</strong>: Uses 60 zones and meter-based coordinates, normally positive within the appropriate zone.</li>
+</ul>
+</section>
+<section id="essential-sf-functions" class="level3">
+<h3 class="anchored" data-anchor-id="essential-sf-functions">Essential <code>sf</code> Functions</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 71%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>Key purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>st_crs(x)</code></td>
+<td>Check the CRS</td>
+</tr>
+<tr class="even">
+<td><code>st_set_crs(x, crs)</code></td>
+<td>Assign a CRS label without changing coordinates</td>
+</tr>
+<tr class="odd">
+<td><code>st_transform(x, crs)</code></td>
+<td>Convert coordinates to another CRS</td>
+</tr>
+<tr class="even">
+<td><code>st_buffer(x, dist)</code></td>
+<td>Create a buffer</td>
+</tr>
+<tr class="odd">
+<td><code>st_intersects(x, y)</code></td>
+<td>Test whether geometries share any location</td>
+</tr>
+<tr class="even">
+<td><code>st_touches(x, y)</code></td>
+<td>Test whether geometries touch without interior overlap</td>
+</tr>
+<tr class="odd">
+<td><code>st_within(x, y)</code></td>
+<td>Test whether <code>x</code> lies within <code>y</code></td>
+</tr>
+<tr class="even">
+<td><code>st_filter(x, y)</code></td>
+<td>Keep features based on a spatial relationship</td>
+</tr>
+<tr class="odd">
+<td><code>st_union(x)</code></td>
+<td>Merge geometries and dissolve internal boundaries</td>
+</tr>
+<tr class="even">
+<td><code>st_join(x, y)</code></td>
+<td>Join attributes based on spatial relationships</td>
+</tr>
+<tr class="odd">
+<td><code>st_distance(x, y)</code></td>
+<td>Calculate distances between geometries</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="reflection" class="level2">
+<h2 class="anchored" data-anchor-id="reflection">Reflection</h2>
+</section>
+<section id="questions-i-still-have" class="level2">
+<h2 class="anchored" data-anchor-id="questions-i-still-have">Questions I Still Have</h2>
 
 
 <!-- -->
 
+</section>
 
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-date-sort="1789704000000" data-listing-file-modified-sort="1789758975675" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="545">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-04.html" class="no-external">Week 4: Go Spatial!</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-04.html" class="no-external">
-<p>Data Joins, CRS, and Spatial Analysis in R</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-04.html" class="no-external">
-<div class="listing-date">
-Sep 18, 2026
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-listing-date-sort="1789099200000" data-listing-file-modified-sort="1789272857074" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="517">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-03.html" class="no-external">Week 3: Visulaization</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-03.html" class="no-external">
-<p>Visualization · exploratory data analysis · joins</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-03.html" class="no-external">
-<div class="listing-date">
-Sep 11, 2026
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-listing-date-sort="1788580800000" data-listing-file-modified-sort="1788798437582" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="163">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-02.html" class="no-external">Week 2: dplyr and Census Data</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-02.html" class="no-external">
-<p>table function and acs data.</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-02.html" class="no-external">
-<div class="listing-date">
-Sep 5, 2026
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-listing-date-sort="1787889600000" data-listing-file-modified-sort="1788202764837" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="247">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../weekly-notes/week-01.html" class="no-external">Week 1: Getting Set Up</a>
-</h3>
-<div class="delink listing-description"><a href="../weekly-notes/week-01.html" class="no-external">
-<p>First impressions, and getting the workflow running.</p>
-</a></div>
-</div>
-<div class="metadata">
-<a href="../weekly-notes/week-01.html" class="no-external">
-<div class="listing-date">
-Aug 28, 2026
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
@@ -783,19 +782,69 @@ Aug 28, 2026
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Weekly Notes"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "Running notes from MUSA 5080."</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">listing:</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">  contents: "*.qmd"</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">  sort: "date desc"</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">  type: default</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">  fields: [title, date, description]</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">  sort-ui: false</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">  filter-ui: false</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>Notes from each week of MUSA 5080. New entries appear here automatically —</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>add a <span class="in">`.qmd`</span> file to this folder and render.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Week 4: Go Spatial!"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "Data Joins, CRS, and Spatial Analysis in R"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2026-09-18</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## What We Did</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Announcement</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Quiz</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Lecture</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Lab practice</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>GO HOME!</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">## Key Concepts</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">### table join</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`inner_join()`</span>: Keep matching records only.</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`left_join()`</span>: Keep all left-table records; unmatched values become NA.</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`full_join()`</span>: Keep all records from both tables.</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">### Spatial Data and CRS</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`get_acs(..., geometry = TRUE)`</span>: Return census data with spatial geometry.</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Sticky geometry: Geometry stays attached during table operations; remove with <span class="in">`st_drop_geometry()`</span>.</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>CRS: Defines how coordinates represent locations.</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Geographic CRS: Longitude and latitude, measured in degrees.</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Projected CRS: Planar coordinates, usually measured in meters or feet.</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>NAD83: Common datum for North American data.</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>WGS84: Global datum used by GPS.</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="fu">### Map Projections</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Types**: Cylindrical, conic, and planar/azimuthal.</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Conformal**: Preserves local angles and shapes.</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Equal-area**: Preserves area.</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Equidistant**: Preserves distances along specific lines or from specific points.</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Azimuthal**: Preserves directions from a central point.</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**UTM**: Uses 60 zones and meter-based coordinates, normally positive within the appropriate zone.</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="fu">### Essential `sf` Functions</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Function               <span class="pp">|</span> Key purpose                                            <span class="pp">|</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="pp">| ----------------------</span> <span class="pp">| ------------------------------------------------------</span> <span class="pp">|</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_crs(x)`</span>            <span class="pp">|</span> Check the CRS                                          <span class="pp">|</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_set_crs(x, crs)`</span>   <span class="pp">|</span> Assign a CRS label without changing coordinates        <span class="pp">|</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_transform(x, crs)`</span> <span class="pp">|</span> Convert coordinates to another CRS                     <span class="pp">|</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_buffer(x, dist)`</span>   <span class="pp">|</span> Create a buffer                                        <span class="pp">|</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_intersects(x, y)`</span>  <span class="pp">|</span> Test whether geometries share any location             <span class="pp">|</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_touches(x, y)`</span>     <span class="pp">|</span> Test whether geometries touch without interior overlap <span class="pp">|</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_within(x, y)`</span>      <span class="pp">|</span> Test whether <span class="in">`x`</span> lies within <span class="in">`y`</span>                       <span class="pp">|</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_filter(x, y)`</span>      <span class="pp">|</span> Keep features based on a spatial relationship          <span class="pp">|</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_union(x)`</span>          <span class="pp">|</span> Merge geometries and dissolve internal boundaries      <span class="pp">|</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_join(x, y)`</span>        <span class="pp">|</span> Join attributes based on spatial relationships         <span class="pp">|</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_distance(x, y)`</span>    <span class="pp">|</span> Calculate distances between geometries                 <span class="pp">|</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="fu">## Reflection</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a><span class="fu">## Questions I Still Have</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

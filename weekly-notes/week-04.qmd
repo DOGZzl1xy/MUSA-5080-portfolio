@@ -1,0 +1,64 @@
+---
+title: "Week 4: Go Spatial!"
+description: "Data Joins, CRS, and Spatial Analysis in R"
+date: 2026-09-18
+---
+
+## What We Did
+
+- Announcement
+- Quiz
+- Lecture
+- Lab practice
+- GO HOME!
+
+## Key Concepts
+
+### table join
+- `inner_join()`: Keep matching records only.
+- `left_join()`: Keep all left-table records; unmatched values become NA.
+- `full_join()`: Keep all records from both tables.
+
+### Spatial Data and CRS
+
+- `get_acs(..., geometry = TRUE)`: Return census data with spatial geometry.
+- Sticky geometry: Geometry stays attached during table operations; remove with `st_drop_geometry()`.
+- CRS: Defines how coordinates represent locations.
+- Geographic CRS: Longitude and latitude, measured in degrees.
+- Projected CRS: Planar coordinates, usually measured in meters or feet.
+- NAD83: Common datum for North American data.
+- WGS84: Global datum used by GPS.
+
+### Map Projections
+
+- **Types**: Cylindrical, conic, and planar/azimuthal.
+- **Conformal**: Preserves local angles and shapes.
+- **Equal-area**: Preserves area.
+- **Equidistant**: Preserves distances along specific lines or from specific points.
+- **Azimuthal**: Preserves directions from a central point.
+- **UTM**: Uses 60 zones and meter-based coordinates, normally positive within the appropriate zone.
+
+
+### Essential `sf` Functions
+
+| Function               | Key purpose                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `st_crs(x)`            | Check the CRS                                          |
+| `st_set_crs(x, crs)`   | Assign a CRS label without changing coordinates        |
+| `st_transform(x, crs)` | Convert coordinates to another CRS                     |
+| `st_buffer(x, dist)`   | Create a buffer                                        |
+| `st_intersects(x, y)`  | Test whether geometries share any location             |
+| `st_touches(x, y)`     | Test whether geometries touch without interior overlap |
+| `st_within(x, y)`      | Test whether `x` lies within `y`                       |
+| `st_filter(x, y)`      | Keep features based on a spatial relationship          |
+| `st_union(x)`          | Merge geometries and dissolve internal boundaries      |
+| `st_join(x, y)`        | Join attributes based on spatial relationships         |
+| `st_distance(x, y)`    | Calculate distances between geometries                 |
+
+
+
+
+## Reflection
+
+
+## Questions I Still Have
