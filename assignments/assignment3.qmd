@@ -238,7 +238,12 @@ reliability_table %>%
   ) %>%
   tab_options(
     table.font.size = px(12)
-  )
+  )%>%
+  tab_options(
+    container.height = px(500),
+    container.overflow.y = TRUE,
+    container.width = pct(100),
+    container.overflow.x = TRUE)
 
 change_summary <- poverty_withrate %>%
   mutate(
