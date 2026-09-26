@@ -1,0 +1,91 @@
+---
+title: "Week 5: Machine Learning & Linear Regression"
+description: "Basic Knowledge of Machine Learning and Linear Regression in R"
+date: 2026-09-25
+---
+
+## What We Did
+
+- Lecture
+- Quiz
+- Lecture
+- Lab practice
+- GO HOME!
+
+## Key Concepts
+
+
+### 1. Goal of Machine Learning
+- In this class, ML is used mainly for **prediction**: producing accurate predictions on new data.
+- This differs from **inference** in traditional statistics, which focuses on understanding and explaining relationships between variables.
+
+### 2. Basic Model Form
+$$y = f(x) + \epsilon$$
+- $f(x)$: the systematic relationship between $X$ and $y$. The model's job is to estimate $\hat{f}$.
+- $\epsilon$: random error with mean 0. This is the **irreducible error**.
+- Prediction error = reducible error (from imperfect estimation of $f$) + irreducible error ($\epsilon$).
+
+### 3. Model Flexibility Spectrum: Rigid → Flexible
+Linear → Lasso / Ridge → Logistic → Tree-based → Boosting → Neural Network
+
+| Direction | Flexibility | Interpretability | Risk |
+|---|---|---|---|
+| Left (rigid) | Low | High | Underfitting (high bias) |
+| Right (flexible) | High | Low (black box) | Overfitting (high variance) |
+
+- **Lasso (L1)**: shrinks some coefficients exactly to 0, so it performs variable selection.
+- **Ridge (L2)**: shrinks all coefficients toward 0 without setting any to 0. Useful when predictors are collinear.
+- **Logistic**: used for binary classification. It outputs probabilities.
+
+### 4. Parametric vs. Non-parametric
+- **Parametric** models assume a functional form for $f$ (e.g., linear) and then estimate its parameters. They are simple, interpretable, and need less data, but they have high bias if the assumed form is wrong.
+- **Non-parametric** models assume no fixed form for $f$ (e.g., trees, KNN). They are highly flexible but need more data and are prone to overfitting.
+
+### 5. Linear Regression
+$$\hat{y} = \beta_0 + \beta_1 x_1 + \dots + \beta_p x_p$$
+- $\beta_0$: the intercept.
+- $\beta_1$: the average change in $y$ for a one-unit increase in $x_1$, **holding other variables constant**. It gives the direction and size of $x_1$'s influence.
+
+#### Least Squares (OLS)
+- Coefficients are estimated by minimizing the residual sum of squares (RSS):
+$$\min_{\beta} \; RSS = \sum_{i=1}^{n}(y_i - \hat{y}_i)^2$$
+
+### 6. Evaluation Metrics
+- **$R^2$**: the proportion of variance in $y$ explained by the model. It ranges from 0 to 1, and higher is better.
+$$R^2 = 1 - \frac{RSS}{TSS}$$
+  - Note: $R^2$ always increases when you add variables, so also check Adjusted $R^2$ or out-of-sample performance.
+- **RMSE**: the typical size of prediction errors, in the same units as $y$. Lower is better.
+$$RMSE = \sqrt{\frac{1}{n}\sum (y_i - \hat{y}_i)^2}$$
+  - For prediction tasks, focus on **test-set or CV RMSE**.
+
+### 7. Cross Validation (CV)
+- Purpose: estimate how the model performs on **unseen data**, compare models, and tune parameters.
+- **K-Fold CV**:
+  1. Randomly split the data into K folds.
+  2. Train on K−1 folds and validate on the remaining fold.
+  3. Repeat K times and average the error (e.g., mean RMSE).
+- The exercises use **K = 10**. K = 5 or 10 is a common balance between bias and variance.
+
+### 8. Over-fitting
+- An overfit model learns the noise in the training data, so **training error is low but test error is high**.
+- More flexible models overfit more easily. This is the **bias–variance trade-off**.
+- Remedies: select models with CV, use regularization (Lasso/Ridge), reduce the number of variables, or get more data.
+
+### 9. Multicollinearity
+- Multicollinearity means the predictors are highly correlated with each other.
+- Consequences: unstable coefficient estimates, inflated standard errors, and coefficient signs or magnitudes that are hard to interpret. Prediction accuracy is usually less affected.
+- Diagnosis: check the correlation matrix or **VIF** (above 5 or 10 is considered severe).
+- Remedies: drop or combine variables, use Ridge, or apply PCA.
+
+### 10. Homoscedasticity
+- Given all predictors $X$, the variance of the error term is constant:
+$$\operatorname{Var}(\epsilon_i \mid X) = \sigma^2 \quad (\text{constant})$$
+- When this fails, the errors are **heteroscedastic**. Standard errors become biased, so significance tests are unreliable.
+- Diagnosis: plot residuals vs. fitted values (a funnel shape signals heteroscedasticity), or run the Breusch–Pagan test.
+- Remedies: log-transform $y$, use robust standard errors, or use weighted least squares (WLS).
+
+
+## Reflection
+
+
+## Questions I Still Have

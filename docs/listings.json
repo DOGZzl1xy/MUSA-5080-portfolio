@@ -2,6 +2,7 @@
   {
     "listing": "/weekly-notes/index.html",
     "items": [
+      "/weekly-notes/week-05.html",
       "/weekly-notes/week-04.html",
       "/weekly-notes/week-03.html",
       "/weekly-notes/week-02.html",
@@ -11,6 +12,7 @@
   {
     "listing": "/assignments/index.html",
     "items": [
+      "/assignments/assignment_feature_engineering_template.html",
       "/assignments/assignment2.html",
       "/assignments/assignment3.html"
     ]

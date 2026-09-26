@@ -6,9 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Graded work for MUSA 5080.">
+<meta name="dcterms.date" content="2026-09-25">
+<meta name="description" content="Basic Knowledge of Machine Learning and Linear Regression in R">
 
-<title>Assignments – Xuanyu Zhou - MUSA 5080 Portfolio</title>
+<title>Week 5: Machine Learning &amp; Linear Regression – Xuanyu Zhou - MUSA 5080 Portfolio</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -69,8 +70,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -108,35 +107,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-title','listing-date','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-subtitle","listing-image","listing-description"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -200,7 +170,7 @@ window.Quarto = {
 <span class="menu-text">Weekly Notes</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="../assignments/index.html" aria-current="page"> 
+    <a class="nav-link" href="../assignments/index.html"> 
 <span class="menu-text">Assignments</span></a>
   </li>  
 </ul>
@@ -221,20 +191,41 @@ window.Quarto = {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-we-did" id="toc-what-we-did" class="nav-link active" data-scroll-target="#what-we-did">What We Did</a></li>
+  <li><a href="#key-concepts" id="toc-key-concepts" class="nav-link" data-scroll-target="#key-concepts">Key Concepts</a>
+  <ul class="collapse">
+  <li><a href="#goal-of-machine-learning" id="toc-goal-of-machine-learning" class="nav-link" data-scroll-target="#goal-of-machine-learning">1. Goal of Machine Learning</a></li>
+  <li><a href="#basic-model-form" id="toc-basic-model-form" class="nav-link" data-scroll-target="#basic-model-form">2. Basic Model Form</a></li>
+  <li><a href="#model-flexibility-spectrum-rigid-flexible" id="toc-model-flexibility-spectrum-rigid-flexible" class="nav-link" data-scroll-target="#model-flexibility-spectrum-rigid-flexible">3. Model Flexibility Spectrum: Rigid → Flexible</a></li>
+  <li><a href="#parametric-vs.-non-parametric" id="toc-parametric-vs.-non-parametric" class="nav-link" data-scroll-target="#parametric-vs.-non-parametric">4. Parametric vs.&nbsp;Non-parametric</a></li>
+  <li><a href="#linear-regression" id="toc-linear-regression" class="nav-link" data-scroll-target="#linear-regression">5. Linear Regression</a></li>
+  <li><a href="#evaluation-metrics" id="toc-evaluation-metrics" class="nav-link" data-scroll-target="#evaluation-metrics">6. Evaluation Metrics</a></li>
+  <li><a href="#cross-validation-cv" id="toc-cross-validation-cv" class="nav-link" data-scroll-target="#cross-validation-cv">7. Cross Validation (CV)</a></li>
+  <li><a href="#over-fitting" id="toc-over-fitting" class="nav-link" data-scroll-target="#over-fitting">8. Over-fitting</a></li>
+  <li><a href="#multicollinearity" id="toc-multicollinearity" class="nav-link" data-scroll-target="#multicollinearity">9. Multicollinearity</a></li>
+  <li><a href="#homoscedasticity" id="toc-homoscedasticity" class="nav-link" data-scroll-target="#homoscedasticity">10. Homoscedasticity</a></li>
+  </ul></li>
+  <li><a href="#reflection" id="toc-reflection" class="nav-link" data-scroll-target="#reflection">Reflection</a></li>
+  <li><a href="#questions-i-still-have" id="toc-questions-i-still-have" class="nav-link" data-scroll-target="#questions-i-still-have">Questions I Still Have</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Assignments</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title">Week 5: Machine Learning &amp; Linear Regression</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
 <div>
   <div class="description">
-    Graded work for MUSA 5080.
+    Basic Knowledge of Machine Learning and Linear Regression in R
   </div>
 </div>
 
@@ -242,6 +233,12 @@ window.Quarto = {
 <div class="quarto-title-meta">
 
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 25, 2026</p>
+    </div>
+  </div>
   
     
   </div>
@@ -251,66 +248,150 @@ window.Quarto = {
 </header>
 
 
-<p>Completed assignments for MUSA 5080. New assignments appear here automatically once you add the <code>.qmd</code> file to this folder and render.</p>
-
+<section id="what-we-did" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-did">What We Did</h2>
+<ul>
+<li>Lecture</li>
+<li>Quiz</li>
+<li>Lecture</li>
+<li>Lab practice</li>
+<li>GO HOME!</li>
+</ul>
+</section>
+<section id="key-concepts" class="level2">
+<h2 class="anchored" data-anchor-id="key-concepts">Key Concepts</h2>
+<section id="goal-of-machine-learning" class="level3">
+<h3 class="anchored" data-anchor-id="goal-of-machine-learning">1. Goal of Machine Learning</h3>
+<ul>
+<li>In this class, ML is used mainly for <strong>prediction</strong>: producing accurate predictions on new data.</li>
+<li>This differs from <strong>inference</strong> in traditional statistics, which focuses on understanding and explaining relationships between variables.</li>
+</ul>
+</section>
+<section id="basic-model-form" class="level3">
+<h3 class="anchored" data-anchor-id="basic-model-form">2. Basic Model Form</h3>
+<p><span class="math display">\[y = f(x) + \epsilon\]</span> - <span class="math inline">\(f(x)\)</span>: the systematic relationship between <span class="math inline">\(X\)</span> and <span class="math inline">\(y\)</span>. The model’s job is to estimate <span class="math inline">\(\hat{f}\)</span>. - <span class="math inline">\(\epsilon\)</span>: random error with mean 0. This is the <strong>irreducible error</strong>. - Prediction error = reducible error (from imperfect estimation of <span class="math inline">\(f\)</span>) + irreducible error (<span class="math inline">\(\epsilon\)</span>).</p>
+</section>
+<section id="model-flexibility-spectrum-rigid-flexible" class="level3">
+<h3 class="anchored" data-anchor-id="model-flexibility-spectrum-rigid-flexible">3. Model Flexibility Spectrum: Rigid → Flexible</h3>
+<p>Linear → Lasso / Ridge → Logistic → Tree-based → Boosting → Neural Network</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Direction</th>
+<th>Flexibility</th>
+<th>Interpretability</th>
+<th>Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Left (rigid)</td>
+<td>Low</td>
+<td>High</td>
+<td>Underfitting (high bias)</td>
+</tr>
+<tr class="even">
+<td>Right (flexible)</td>
+<td>High</td>
+<td>Low (black box)</td>
+<td>Overfitting (high variance)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Lasso (L1)</strong>: shrinks some coefficients exactly to 0, so it performs variable selection.</li>
+<li><strong>Ridge (L2)</strong>: shrinks all coefficients toward 0 without setting any to 0. Useful when predictors are collinear.</li>
+<li><strong>Logistic</strong>: used for binary classification. It outputs probabilities.</li>
+</ul>
+</section>
+<section id="parametric-vs.-non-parametric" class="level3">
+<h3 class="anchored" data-anchor-id="parametric-vs.-non-parametric">4. Parametric vs.&nbsp;Non-parametric</h3>
+<ul>
+<li><strong>Parametric</strong> models assume a functional form for <span class="math inline">\(f\)</span> (e.g., linear) and then estimate its parameters. They are simple, interpretable, and need less data, but they have high bias if the assumed form is wrong.</li>
+<li><strong>Non-parametric</strong> models assume no fixed form for <span class="math inline">\(f\)</span> (e.g., trees, KNN). They are highly flexible but need more data and are prone to overfitting.</li>
+</ul>
+</section>
+<section id="linear-regression" class="level3">
+<h3 class="anchored" data-anchor-id="linear-regression">5. Linear Regression</h3>
+<p><span class="math display">\[\hat{y} = \beta_0 + \beta_1 x_1 + \dots + \beta_p x_p\]</span> - <span class="math inline">\(\beta_0\)</span>: the intercept. - <span class="math inline">\(\beta_1\)</span>: the average change in <span class="math inline">\(y\)</span> for a one-unit increase in <span class="math inline">\(x_1\)</span>, <strong>holding other variables constant</strong>. It gives the direction and size of <span class="math inline">\(x_1\)</span>’s influence.</p>
+<section id="least-squares-ols" class="level4">
+<h4 class="anchored" data-anchor-id="least-squares-ols">Least Squares (OLS)</h4>
+<ul>
+<li>Coefficients are estimated by minimizing the residual sum of squares (RSS): <span class="math display">\[\min_{\beta} \; RSS = \sum_{i=1}^{n}(y_i - \hat{y}_i)^2\]</span></li>
+</ul>
+</section>
+</section>
+<section id="evaluation-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="evaluation-metrics">6. Evaluation Metrics</h3>
+<ul>
+<li><strong><span class="math inline">\(R^2\)</span></strong>: the proportion of variance in <span class="math inline">\(y\)</span> explained by the model. It ranges from 0 to 1, and higher is better. <span class="math display">\[R^2 = 1 - \frac{RSS}{TSS}\]</span>
+<ul>
+<li>Note: <span class="math inline">\(R^2\)</span> always increases when you add variables, so also check Adjusted <span class="math inline">\(R^2\)</span> or out-of-sample performance.</li>
+</ul></li>
+<li><strong>RMSE</strong>: the typical size of prediction errors, in the same units as <span class="math inline">\(y\)</span>. Lower is better. <span class="math display">\[RMSE = \sqrt{\frac{1}{n}\sum (y_i - \hat{y}_i)^2}\]</span>
+<ul>
+<li>For prediction tasks, focus on <strong>test-set or CV RMSE</strong>.</li>
+</ul></li>
+</ul>
+</section>
+<section id="cross-validation-cv" class="level3">
+<h3 class="anchored" data-anchor-id="cross-validation-cv">7. Cross Validation (CV)</h3>
+<ul>
+<li>Purpose: estimate how the model performs on <strong>unseen data</strong>, compare models, and tune parameters.</li>
+<li><strong>K-Fold CV</strong>:
+<ol type="1">
+<li>Randomly split the data into K folds.</li>
+<li>Train on K−1 folds and validate on the remaining fold.</li>
+<li>Repeat K times and average the error (e.g., mean RMSE).</li>
+</ol></li>
+<li>The exercises use <strong>K = 10</strong>. K = 5 or 10 is a common balance between bias and variance.</li>
+</ul>
+</section>
+<section id="over-fitting" class="level3">
+<h3 class="anchored" data-anchor-id="over-fitting">8. Over-fitting</h3>
+<ul>
+<li>An overfit model learns the noise in the training data, so <strong>training error is low but test error is high</strong>.</li>
+<li>More flexible models overfit more easily. This is the <strong>bias–variance trade-off</strong>.</li>
+<li>Remedies: select models with CV, use regularization (Lasso/Ridge), reduce the number of variables, or get more data.</li>
+</ul>
+</section>
+<section id="multicollinearity" class="level3">
+<h3 class="anchored" data-anchor-id="multicollinearity">9. Multicollinearity</h3>
+<ul>
+<li>Multicollinearity means the predictors are highly correlated with each other.</li>
+<li>Consequences: unstable coefficient estimates, inflated standard errors, and coefficient signs or magnitudes that are hard to interpret. Prediction accuracy is usually less affected.</li>
+<li>Diagnosis: check the correlation matrix or <strong>VIF</strong> (above 5 or 10 is considered severe).</li>
+<li>Remedies: drop or combine variables, use Ridge, or apply PCA.</li>
+</ul>
+</section>
+<section id="homoscedasticity" class="level3">
+<h3 class="anchored" data-anchor-id="homoscedasticity">10. Homoscedasticity</h3>
+<ul>
+<li>Given all predictors <span class="math inline">\(X\)</span>, the variance of the error term is constant: <span class="math display">\[\operatorname{Var}(\epsilon_i \mid X) = \sigma^2 \quad (\text{constant})\]</span></li>
+<li>When this fails, the errors are <strong>heteroscedastic</strong>. Standard errors become biased, so significance tests are unreliable.</li>
+<li>Diagnosis: plot residuals vs.&nbsp;fitted values (a funnel shape signals heteroscedasticity), or run the Breusch–Pagan test.</li>
+<li>Remedies: log-transform <span class="math inline">\(y\)</span>, use robust standard errors, or use weighted least squares (WLS).</li>
+</ul>
+</section>
+</section>
+<section id="reflection" class="level2">
+<h2 class="anchored" data-anchor-id="reflection">Reflection</h2>
+</section>
+<section id="questions-i-still-have" class="level2">
+<h2 class="anchored" data-anchor-id="questions-i-still-have">Questions I Still Have</h2>
 
 
 <!-- -->
 
+</section>
 
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-file-modified-sort="1790400303900" data-listing-reading-time-sort="25" data-listing-word-count-sort="4997">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../assignments/assignment_feature_engineering_template.html" class="no-external">Assignment: Building Features, Watching What Happens</a>
-</h3>
-<div class="delink listing-description"><a href="../assignments/assignment_feature_engineering_template.html" class="no-external">
-This is <strong>not a competition.</strong> There’s no leaderboard and no target RMSE. The goal is to practice the full prediction workflow on a question you choose, and to <strong>find out what…</strong>
-</a></div>
-</div>
-<div class="metadata">
-<a href="../assignments/assignment_feature_engineering_template.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-listing-date-sort="1790395200000" data-listing-file-modified-sort="1788665510671" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="885">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../assignments/assignment2.html" class="no-external">Assignment 2: Who Do We Know the Least About?</a>
-</h3>
-<div class="delink listing-description"><a href="../assignments/assignment2.html" class="no-external">
-Every number the American Community Survey publishes is an estimate drawn from a sample, not a count. That means every number comes with a margin of error — a statement…
-</a></div>
-</div>
-<div class="metadata">
-<a href="../assignments/assignment2.html" class="no-external">
-<div class="listing-date">
-Sep 26, 2026
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-listing-date-sort="1790395200000" data-listing-file-modified-sort="1790275912875" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="10" data-listing-word-count-sort="1952">
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../assignments/assignment3.html" class="no-external">Verify the Claim: Did Philadelphia’s Poverty Rate Change Significantly?</a>
-</h3>
-<div class="delink listing-description"><a href="../assignments/assignment3.html" class="no-external">
-Read the origin report.
-</a></div>
-</div>
-<div class="metadata">
-<a href="../assignments/assignment3.html" class="no-external">
-<div class="listing-date">
-Sep 26, 2026
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
@@ -763,19 +844,96 @@ Sep 26, 2026
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Assignments"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "Graded work for MUSA 5080."</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">listing:</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">  contents: "*.qmd"</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">  sort: "date desc"</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">  type: default</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">  fields: [title, date, description]</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">  sort-ui: false</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">  filter-ui: false</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>Completed assignments for MUSA 5080. New assignments appear here automatically</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>once you add the <span class="in">`.qmd`</span> file to this folder and render.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Week 5: Machine Learning &amp; Linear Regression"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "Basic Knowledge of Machine Learning and Linear Regression in R"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2026-09-25</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## What We Did</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Lecture</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Quiz</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Lecture</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Lab practice</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>GO HOME!</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">## Key Concepts</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">### 1. Goal of Machine Learning</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>In this class, ML is used mainly for **prediction**: producing accurate predictions on new data.</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>This differs from **inference** in traditional statistics, which focuses on understanding and explaining relationships between variables.</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">### 2. Basic Model Form</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>$$y = f(x) + \epsilon$$</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$f(x)$: the systematic relationship between $X$ and $y$. The model's job is to estimate $\hat{f}$.</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$\epsilon$: random error with mean 0. This is the **irreducible error**.</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Prediction error = reducible error (from imperfect estimation of $f$) + irreducible error ($\epsilon$).</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="fu">### 3. Model Flexibility Spectrum: Rigid → Flexible</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>Linear → Lasso / Ridge → Logistic → Tree-based → Boosting → Neural Network</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Direction <span class="pp">|</span> Flexibility <span class="pp">|</span> Interpretability <span class="pp">|</span> Risk <span class="pp">|</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Left (rigid) <span class="pp">|</span> Low <span class="pp">|</span> High <span class="pp">|</span> Underfitting (high bias) <span class="pp">|</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Right (flexible) <span class="pp">|</span> High <span class="pp">|</span> Low (black box) <span class="pp">|</span> Overfitting (high variance) <span class="pp">|</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Lasso (L1)**: shrinks some coefficients exactly to 0, so it performs variable selection.</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Ridge (L2)**: shrinks all coefficients toward 0 without setting any to 0. Useful when predictors are collinear.</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Logistic**: used for binary classification. It outputs probabilities.</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="fu">### 4. Parametric vs. Non-parametric</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Parametric** models assume a functional form for $f$ (e.g., linear) and then estimate its parameters. They are simple, interpretable, and need less data, but they have high bias if the assumed form is wrong.</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Non-parametric** models assume no fixed form for $f$ (e.g., trees, KNN). They are highly flexible but need more data and are prone to overfitting.</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="fu">### 5. Linear Regression</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>$$\hat{y} = \beta_0 + \beta_1 x_1 + \dots + \beta_p x_p$$</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$\beta_0$: the intercept.</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$\beta_1$: the average change in $y$ for a one-unit increase in $x_1$, **holding other variables constant**. It gives the direction and size of $x_1$'s influence.</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Least Squares (OLS)</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Coefficients are estimated by minimizing the residual sum of squares (RSS):</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>$$\min_{\beta} \; RSS = \sum_{i=1}^{n}(y_i - \hat{y}_i)^2$$</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="fu">### 6. Evaluation Metrics</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**$R^2$**: the proportion of variance in $y$ explained by the model. It ranges from 0 to 1, and higher is better.</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>$$R^2 = 1 - \frac{RSS}{TSS}$$</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>Note: $R^2$ always increases when you add variables, so also check Adjusted $R^2$ or out-of-sample performance.</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**RMSE**: the typical size of prediction errors, in the same units as $y$. Lower is better.</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>$$RMSE = \sqrt{\frac{1}{n}\sum (y_i - \hat{y}_i)^2}$$</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>For prediction tasks, focus on **test-set or CV RMSE**.</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="fu">### 7. Cross Validation (CV)</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Purpose: estimate how the model performs on **unseen data**, compare models, and tune parameters.</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**K-Fold CV**:</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a><span class="ss">  1. </span>Randomly split the data into K folds.</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a><span class="ss">  2. </span>Train on K−1 folds and validate on the remaining fold.</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a><span class="ss">  3. </span>Repeat K times and average the error (e.g., mean RMSE).</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The exercises use **K = 10**. K = 5 or 10 is a common balance between bias and variance.</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a><span class="fu">### 8. Over-fitting</span></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>An overfit model learns the noise in the training data, so **training error is low but test error is high**.</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>More flexible models overfit more easily. This is the **bias–variance trade-off**.</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Remedies: select models with CV, use regularization (Lasso/Ridge), reduce the number of variables, or get more data.</span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a><span class="fu">### 9. Multicollinearity</span></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Multicollinearity means the predictors are highly correlated with each other.</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Consequences: unstable coefficient estimates, inflated standard errors, and coefficient signs or magnitudes that are hard to interpret. Prediction accuracy is usually less affected.</span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Diagnosis: check the correlation matrix or **VIF** (above 5 or 10 is considered severe).</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Remedies: drop or combine variables, use Ridge, or apply PCA.</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a><span class="fu">### 10. Homoscedasticity</span></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Given all predictors $X$, the variance of the error term is constant:</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>$$\operatorname{Var}(\epsilon_i \mid X) = \sigma^2 \quad (\text{constant})$$</span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>When this fails, the errors are **heteroscedastic**. Standard errors become biased, so significance tests are unreliable.</span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Diagnosis: plot residuals vs. fitted values (a funnel shape signals heteroscedasticity), or run the Breusch–Pagan test.</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Remedies: log-transform $y$, use robust standard errors, or use weighted least squares (WLS).</span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a><span class="fu">## Reflection</span></span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a><span class="fu">## Questions I Still Have</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
