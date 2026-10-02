@@ -1,7 +1,7 @@
 ---
 title: "Verify the Claim: Did Philadelphia’s Poverty Rate Change Significantly?"
 author: "Xuanyu Zhou"
-date: today
+date: 2026-09-25
 format:
   html:
     toc: true

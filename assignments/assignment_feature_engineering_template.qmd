@@ -11,6 +11,7 @@ execute:
   warning: false
   message: false
 freeze: false
+date: 2026-10-15
 ---
 
 ## What this assignment is (and isn't)
