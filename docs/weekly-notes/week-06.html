@@ -210,9 +210,6 @@ window.Quarto = {
   <li><a href="#comparing-the-specifications" id="toc-comparing-the-specifications" class="nav-link" data-scroll-target="#comparing-the-specifications">9. Comparing the specifications</a></li>
   <li><a href="#r-syntax-to-remember" id="toc-r-syntax-to-remember" class="nav-link" data-scroll-target="#r-syntax-to-remember">10. R syntax to remember</a></li>
   </ul></li>
-  <li><a href="#reflection" id="toc-reflection" class="nav-link" data-scroll-target="#reflection">Reflection</a></li>
-  <li><a href="#questions-i-still-have" id="toc-questions-i-still-have" class="nav-link" data-scroll-target="#questions-i-still-have">Questions I Still Have</a></li>
-  <li><a href="#review-questions" id="toc-review-questions" class="nav-link" data-scroll-target="#review-questions">Review Questions</a></li>
   </ul>
 </nav>
     </div>
@@ -729,60 +726,11 @@ y_{ig} = \alpha_g + \beta x_{ig} + \epsilon_{ig}
 </tr>
 </tbody>
 </table>
-</section>
-</section>
-<section id="reflection" class="level2">
-<h2 class="anchored" data-anchor-id="reflection">Reflection</h2>
-<p>The choice of variable form affects both prediction and interpretation. Logging income changes the meaning of its coefficient; adding age squared makes the age slope depend on age; interacting income with ring makes the income slope depend on location.</p>
-<p>The model comparison also shows why each change needs checking. The district specification predicts better here, while replacing distance with categories loses useful detail. Before comparing RMSE, check the sample, fold assignments, and prediction units. Before interpreting a coefficient, check transformations, reference groups, and interactions.</p>
-</section>
-<section id="questions-i-still-have" class="level2">
-<h2 class="anchored" data-anchor-id="questions-i-still-have">Questions I Still Have</h2>
-<ul>
-<li>How much would a correction for log-outcome retransformation change dollar-scale RMSE?</li>
-<li>How much do district boundaries affect the fixed-effect results?</li>
-<li>Can the spatial features introduced next, such as kNN features, account for some of the remaining district differences?</li>
-</ul>
-</section>
-<section id="review-questions" class="level2">
-<h2 class="anchored" data-anchor-id="review-questions">Review Questions</h2>
-<ol type="1">
-<li>Why is a log-scale RMSE of 0.188 not evidence that a model outperforms one with a dollar RMSE of 265?</li>
-<li>How do <code>folds != k</code> and <code>folds == k</code> prevent a test observation from being used to fit its prediction?</li>
-<li>In <code>rent ~ log(income)</code>, how would you compute the predicted rent change for a 10% income increase?</li>
-<li>With both age and age squared in the model, how do you calculate the slope at a given age and the turning point?</li>
-<li>If <code>ringOuter = -120</code>, which reference group must the interpretation name?</li>
-<li>In <code>log(income) * ring</code>, how do you calculate the Outer slope from the printed coefficients?</li>
-<li>Why can a district with one observation cause cross-validation to fail?</li>
-</ol>
-<div class="callout callout-style-default callout-note callout-titled" title="Answer check">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Answer check
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<ol type="1">
-<li>The errors use different units. Exponentiate each log prediction, then calculate RMSE against observed dollar rents.</li>
-<li>The model trains on all folds except k and predicts only fold k. Every row receives a prediction from a model fitted without that row.</li>
-<li>Multiply the log-income coefficient by <code>log(1.10)</code>.</li>
-<li>The slope is <span class="math inline">\(\beta_1+2\beta_2 age\)</span>. The turning point is <span class="math inline">\(-\beta_1/(2\beta_2)\)</span>; check that it is inside the observed age range.</li>
-<li>Name the reference category, Core in the lecture: Outer tracts have predicted rent $120 lower than Core tracts, holding the other predictors constant.</li>
-<li>Add the main log-income coefficient to <code>log(income):ringOuter</code>.</li>
-<li>Holding out its only observation removes that district from training, leaving no estimated coefficient for its test observation.</li>
-</ol>
-</div>
-</div>
-</div>
 
 
 <!-- -->
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -1630,41 +1578,7 @@ y_{ig} = \alpha_g + \beta x_{ig} + \epsilon_{ig}
 <span id="cb19-391"><a href="#cb19-391" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`model.matrix()`</span> <span class="pp">|</span> Inspect the encoded predictors <span class="pp">|</span></span>
 <span id="cb19-392"><a href="#cb19-392" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`count(group)`</span> <span class="pp">|</span> Check group sizes before CV <span class="pp">|</span></span>
 <span id="cb19-393"><a href="#cb19-393" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_join(..., largest = TRUE)`</span> <span class="pp">|</span> Assign the spatial match with the largest overlap <span class="pp">|</span></span>
-<span id="cb19-394"><a href="#cb19-394" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`add_row()`</span> <span class="pp">|</span> Record another model and its CV RMSE <span class="pp">|</span></span>
-<span id="cb19-395"><a href="#cb19-395" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-396"><a href="#cb19-396" aria-hidden="true" tabindex="-1"></a><span class="fu">## Reflection</span></span>
-<span id="cb19-397"><a href="#cb19-397" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-398"><a href="#cb19-398" aria-hidden="true" tabindex="-1"></a>The choice of variable form affects both prediction and interpretation. Logging income changes the meaning of its coefficient; adding age squared makes the age slope depend on age; interacting income with ring makes the income slope depend on location.</span>
-<span id="cb19-399"><a href="#cb19-399" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-400"><a href="#cb19-400" aria-hidden="true" tabindex="-1"></a>The model comparison also shows why each change needs checking. The district specification predicts better here, while replacing distance with categories loses useful detail. Before comparing RMSE, check the sample, fold assignments, and prediction units. Before interpreting a coefficient, check transformations, reference groups, and interactions.</span>
-<span id="cb19-401"><a href="#cb19-401" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-402"><a href="#cb19-402" aria-hidden="true" tabindex="-1"></a><span class="fu">## Questions I Still Have</span></span>
-<span id="cb19-403"><a href="#cb19-403" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-404"><a href="#cb19-404" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>How much would a correction for log-outcome retransformation change dollar-scale RMSE?</span>
-<span id="cb19-405"><a href="#cb19-405" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>How much do district boundaries affect the fixed-effect results?</span>
-<span id="cb19-406"><a href="#cb19-406" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Can the spatial features introduced next, such as kNN features, account for some of the remaining district differences?</span>
-<span id="cb19-407"><a href="#cb19-407" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-408"><a href="#cb19-408" aria-hidden="true" tabindex="-1"></a><span class="fu">## Review Questions</span></span>
-<span id="cb19-409"><a href="#cb19-409" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-410"><a href="#cb19-410" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Why is a log-scale RMSE of 0.188 not evidence that a model outperforms one with a dollar RMSE of 265?</span>
-<span id="cb19-411"><a href="#cb19-411" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>How do <span class="in">`folds != k`</span> and <span class="in">`folds == k`</span> prevent a test observation from being used to fit its prediction?</span>
-<span id="cb19-412"><a href="#cb19-412" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>In <span class="in">`rent ~ log(income)`</span>, how would you compute the predicted rent change for a 10% income increase?</span>
-<span id="cb19-413"><a href="#cb19-413" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>With both age and age squared in the model, how do you calculate the slope at a given age and the turning point?</span>
-<span id="cb19-414"><a href="#cb19-414" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>If <span class="in">`ringOuter = -120`</span>, which reference group must the interpretation name?</span>
-<span id="cb19-415"><a href="#cb19-415" aria-hidden="true" tabindex="-1"></a><span class="ss">6. </span>In <span class="in">`log(income) * ring`</span>, how do you calculate the Outer slope from the printed coefficients?</span>
-<span id="cb19-416"><a href="#cb19-416" aria-hidden="true" tabindex="-1"></a><span class="ss">7. </span>Why can a district with one observation cause cross-validation to fail?</span>
-<span id="cb19-417"><a href="#cb19-417" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-418"><a href="#cb19-418" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true" title="Answer check"}</span>
-<span id="cb19-419"><a href="#cb19-419" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-420"><a href="#cb19-420" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>The errors use different units. Exponentiate each log prediction, then calculate RMSE against observed dollar rents.</span>
-<span id="cb19-421"><a href="#cb19-421" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>The model trains on all folds except k and predicts only fold k. Every row receives a prediction from a model fitted without that row.</span>
-<span id="cb19-422"><a href="#cb19-422" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Multiply the log-income coefficient by <span class="in">`log(1.10)`</span>.</span>
-<span id="cb19-423"><a href="#cb19-423" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>The slope is $\beta_1+2\beta_2 age$. The turning point is $-\beta_1/(2\beta_2)$; check that it is inside the observed age range.</span>
-<span id="cb19-424"><a href="#cb19-424" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>Name the reference category, Core in the lecture: Outer tracts have predicted rent $120 lower than Core tracts, holding the other predictors constant.</span>
-<span id="cb19-425"><a href="#cb19-425" aria-hidden="true" tabindex="-1"></a><span class="ss">6. </span>Add the main log-income coefficient to <span class="in">`log(income):ringOuter`</span>.</span>
-<span id="cb19-426"><a href="#cb19-426" aria-hidden="true" tabindex="-1"></a><span class="ss">7. </span>Holding out its only observation removes that district from training, leaving no estimated coefficient for its test observation.</span>
-<span id="cb19-427"><a href="#cb19-427" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-428"><a href="#cb19-428" aria-hidden="true" tabindex="-1"></a>:::</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb19-394"><a href="#cb19-394" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`add_row()`</span> <span class="pp">|</span> Record another model and its CV RMSE <span class="pp">|</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

@@ -392,37 +392,3 @@ District fixed effects produce the lowest CV RMSE in this example. Logging incom
 | `count(group)` | Check group sizes before CV |
 | `st_join(..., largest = TRUE)` | Assign the spatial match with the largest overlap |
 | `add_row()` | Record another model and its CV RMSE |
-
-## Reflection
-
-The choice of variable form affects both prediction and interpretation. Logging income changes the meaning of its coefficient; adding age squared makes the age slope depend on age; interacting income with ring makes the income slope depend on location.
-
-The model comparison also shows why each change needs checking. The district specification predicts better here, while replacing distance with categories loses useful detail. Before comparing RMSE, check the sample, fold assignments, and prediction units. Before interpreting a coefficient, check transformations, reference groups, and interactions.
-
-## Questions I Still Have
-
-- How much would a correction for log-outcome retransformation change dollar-scale RMSE?
-- How much do district boundaries affect the fixed-effect results?
-- Can the spatial features introduced next, such as kNN features, account for some of the remaining district differences?
-
-## Review Questions
-
-1. Why is a log-scale RMSE of 0.188 not evidence that a model outperforms one with a dollar RMSE of 265?
-2. How do `folds != k` and `folds == k` prevent a test observation from being used to fit its prediction?
-3. In `rent ~ log(income)`, how would you compute the predicted rent change for a 10% income increase?
-4. With both age and age squared in the model, how do you calculate the slope at a given age and the turning point?
-5. If `ringOuter = -120`, which reference group must the interpretation name?
-6. In `log(income) * ring`, how do you calculate the Outer slope from the printed coefficients?
-7. Why can a district with one observation cause cross-validation to fail?
-
-::: {.callout-note collapse="true" title="Answer check"}
-
-1. The errors use different units. Exponentiate each log prediction, then calculate RMSE against observed dollar rents.
-2. The model trains on all folds except k and predicts only fold k. Every row receives a prediction from a model fitted without that row.
-3. Multiply the log-income coefficient by `log(1.10)`.
-4. The slope is $\beta_1+2\beta_2 age$. The turning point is $-\beta_1/(2\beta_2)$; check that it is inside the observed age range.
-5. Name the reference category, Core in the lecture: Outer tracts have predicted rent $120 lower than Core tracts, holding the other predictors constant.
-6. Add the main log-income coefficient to `log(income):ringOuter`.
-7. Holding out its only observation removes that district from training, leaving no estimated coefficient for its test observation.
-
-:::
