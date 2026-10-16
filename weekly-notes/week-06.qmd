@@ -358,25 +358,7 @@ The lecture handles groups with fewer than ten observations by assigning their t
 
 Other options discussed include a coarser geography or pooling small groups into an Other category. A geographically sensible merge gives the resulting category a clearer meaning. About ten observations per group is a classroom rule of thumb for ten-fold CV, not a guarantee that every training fold will contain every category.
 
-### 9. Comparing the specifications
-
-The following values are rounded outputs from the lecture slides, all evaluated on the dollar scale:
-
-| Model | Specification | CV RMSE ($) |
-|---|---|---:|
-| m0 | Income, renter share, building age, continuous distance | 265 |
-| m1 | Replace income with log income | 265 |
-| m2 | Log rent and log income; exponentiate predictions | 263 |
-| m3 | Rent in dollars, log income, age and age squared, renter share, distance | 261 |
-| m4 | Replace continuous distance in m3 with rings | 265 |
-| m5 | Add log-income-by-ring interactions to m4 | 264 |
-| m6 | Log income, renter share, age and age squared, merged district fixed effects | 256 |
-
-These are alternative specifications, not a sequence in which every earlier feature remains. In particular, m3 returns to rent in dollars, and m6 uses district fixed effects without retaining distance or the ring interaction.
-
-District fixed effects produce the lowest CV RMSE in this example. Logging income alone makes little difference, and distance bins perform worse than continuous distance. The same rows, folds, and outcome units make those comparisons possible.
-
-### 10. R syntax to remember
+### 9. R syntax to remember
 
 | Code | Purpose or check |
 |---|---|

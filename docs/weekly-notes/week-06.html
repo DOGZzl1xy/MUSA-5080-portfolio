@@ -207,8 +207,7 @@ window.Quarto = {
   <li><a href="#categories-dummy-variables-and-reference-groups" id="toc-categories-dummy-variables-and-reference-groups" class="nav-link" data-scroll-target="#categories-dummy-variables-and-reference-groups">6. Categories, dummy variables, and reference groups</a></li>
   <li><a href="#interactions-different-slopes-by-group" id="toc-interactions-different-slopes-by-group" class="nav-link" data-scroll-target="#interactions-different-slopes-by-group">7. Interactions: different slopes by group</a></li>
   <li><a href="#district-fixed-effects" id="toc-district-fixed-effects" class="nav-link" data-scroll-target="#district-fixed-effects">8. District fixed effects</a></li>
-  <li><a href="#comparing-the-specifications" id="toc-comparing-the-specifications" class="nav-link" data-scroll-target="#comparing-the-specifications">9. Comparing the specifications</a></li>
-  <li><a href="#r-syntax-to-remember" id="toc-r-syntax-to-remember" class="nav-link" data-scroll-target="#r-syntax-to-remember">10. R syntax to remember</a></li>
+  <li><a href="#r-syntax-to-remember" id="toc-r-syntax-to-remember" class="nav-link" data-scroll-target="#r-syntax-to-remember">9. R syntax to remember</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -605,65 +604,8 @@ y_{ig} = \alpha_g + \beta x_{ig} + \epsilon_{ig}
 <p>Other options discussed include a coarser geography or pooling small groups into an Other category. A geographically sensible merge gives the resulting category a clearer meaning. About ten observations per group is a classroom rule of thumb for ten-fold CV, not a guarantee that every training fold will contain every category.</p>
 </section>
 </section>
-<section id="comparing-the-specifications" class="level3">
-<h3 class="anchored" data-anchor-id="comparing-the-specifications">9. Comparing the specifications</h3>
-<p>The following values are rounded outputs from the lecture slides, all evaluated on the dollar scale:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 30%">
-<col style="width: 30%">
-<col style="width: 40%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Model</th>
-<th>Specification</th>
-<th style="text-align: right;">CV RMSE ($)</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>m0</td>
-<td>Income, renter share, building age, continuous distance</td>
-<td style="text-align: right;">265</td>
-</tr>
-<tr class="even">
-<td>m1</td>
-<td>Replace income with log income</td>
-<td style="text-align: right;">265</td>
-</tr>
-<tr class="odd">
-<td>m2</td>
-<td>Log rent and log income; exponentiate predictions</td>
-<td style="text-align: right;">263</td>
-</tr>
-<tr class="even">
-<td>m3</td>
-<td>Rent in dollars, log income, age and age squared, renter share, distance</td>
-<td style="text-align: right;">261</td>
-</tr>
-<tr class="odd">
-<td>m4</td>
-<td>Replace continuous distance in m3 with rings</td>
-<td style="text-align: right;">265</td>
-</tr>
-<tr class="even">
-<td>m5</td>
-<td>Add log-income-by-ring interactions to m4</td>
-<td style="text-align: right;">264</td>
-</tr>
-<tr class="odd">
-<td>m6</td>
-<td>Log income, renter share, age and age squared, merged district fixed effects</td>
-<td style="text-align: right;">256</td>
-</tr>
-</tbody>
-</table>
-<p>These are alternative specifications, not a sequence in which every earlier feature remains. In particular, m3 returns to rent in dollars, and m6 uses district fixed effects without retaining distance or the ring interaction.</p>
-<p>District fixed effects produce the lowest CV RMSE in this example. Logging income alone makes little difference, and distance bins perform worse than continuous distance. The same rows, folds, and outcome units make those comparisons possible.</p>
-</section>
 <section id="r-syntax-to-remember" class="level3">
-<h3 class="anchored" data-anchor-id="r-syntax-to-remember">10. R syntax to remember</h3>
+<h3 class="anchored" data-anchor-id="r-syntax-to-remember">9. R syntax to remember</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -1545,40 +1487,22 @@ y_{ig} = \alpha_g + \beta x_{ig} + \epsilon_{ig}
 <span id="cb19-358"><a href="#cb19-358" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-359"><a href="#cb19-359" aria-hidden="true" tabindex="-1"></a>Other options discussed include a coarser geography or pooling small groups into an Other category. A geographically sensible merge gives the resulting category a clearer meaning. About ten observations per group is a classroom rule of thumb for ten-fold CV, not a guarantee that every training fold will contain every category.</span>
 <span id="cb19-360"><a href="#cb19-360" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-361"><a href="#cb19-361" aria-hidden="true" tabindex="-1"></a><span class="fu">### 9. Comparing the specifications</span></span>
+<span id="cb19-361"><a href="#cb19-361" aria-hidden="true" tabindex="-1"></a><span class="fu">### 9. R syntax to remember</span></span>
 <span id="cb19-362"><a href="#cb19-362" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-363"><a href="#cb19-363" aria-hidden="true" tabindex="-1"></a>The following values are rounded outputs from the lecture slides, all evaluated on the dollar scale:</span>
-<span id="cb19-364"><a href="#cb19-364" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-365"><a href="#cb19-365" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Model <span class="pp">|</span> Specification <span class="pp">|</span> CV RMSE ($) <span class="pp">|</span></span>
-<span id="cb19-366"><a href="#cb19-366" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---:|</span></span>
-<span id="cb19-367"><a href="#cb19-367" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> m0 <span class="pp">|</span> Income, renter share, building age, continuous distance <span class="pp">|</span> 265 <span class="pp">|</span></span>
-<span id="cb19-368"><a href="#cb19-368" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> m1 <span class="pp">|</span> Replace income with log income <span class="pp">|</span> 265 <span class="pp">|</span></span>
-<span id="cb19-369"><a href="#cb19-369" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> m2 <span class="pp">|</span> Log rent and log income; exponentiate predictions <span class="pp">|</span> 263 <span class="pp">|</span></span>
-<span id="cb19-370"><a href="#cb19-370" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> m3 <span class="pp">|</span> Rent in dollars, log income, age and age squared, renter share, distance <span class="pp">|</span> 261 <span class="pp">|</span></span>
-<span id="cb19-371"><a href="#cb19-371" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> m4 <span class="pp">|</span> Replace continuous distance in m3 with rings <span class="pp">|</span> 265 <span class="pp">|</span></span>
-<span id="cb19-372"><a href="#cb19-372" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> m5 <span class="pp">|</span> Add log-income-by-ring interactions to m4 <span class="pp">|</span> 264 <span class="pp">|</span></span>
-<span id="cb19-373"><a href="#cb19-373" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> m6 <span class="pp">|</span> Log income, renter share, age and age squared, merged district fixed effects <span class="pp">|</span> 256 <span class="pp">|</span></span>
-<span id="cb19-374"><a href="#cb19-374" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-375"><a href="#cb19-375" aria-hidden="true" tabindex="-1"></a>These are alternative specifications, not a sequence in which every earlier feature remains. In particular, m3 returns to rent in dollars, and m6 uses district fixed effects without retaining distance or the ring interaction.</span>
-<span id="cb19-376"><a href="#cb19-376" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-377"><a href="#cb19-377" aria-hidden="true" tabindex="-1"></a>District fixed effects produce the lowest CV RMSE in this example. Logging income alone makes little difference, and distance bins perform worse than continuous distance. The same rows, folds, and outcome units make those comparisons possible.</span>
-<span id="cb19-378"><a href="#cb19-378" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-379"><a href="#cb19-379" aria-hidden="true" tabindex="-1"></a><span class="fu">### 10. R syntax to remember</span></span>
-<span id="cb19-380"><a href="#cb19-380" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-381"><a href="#cb19-381" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Code <span class="pp">|</span> Purpose or check <span class="pp">|</span></span>
-<span id="cb19-382"><a href="#cb19-382" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|</span></span>
-<span id="cb19-383"><a href="#cb19-383" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`log(x)`</span> <span class="pp">|</span> Natural log; requires positive values for finite results <span class="pp">|</span></span>
-<span id="cb19-384"><a href="#cb19-384" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`log1p(x)`</span> <span class="pp">|</span> Compute <span class="in">`log(1 + x)`</span>; accommodates zero counts <span class="pp">|</span></span>
-<span id="cb19-385"><a href="#cb19-385" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`exp(pred)`</span> <span class="pp">|</span> Back-transform a log prediction <span class="pp">|</span></span>
-<span id="cb19-386"><a href="#cb19-386" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`x + I(x^2)`</span> <span class="pp">|</span> Include a linear term and its square <span class="pp">|</span></span>
-<span id="cb19-387"><a href="#cb19-387" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`factor(x)`</span> <span class="pp">|</span> Treat labels as categories <span class="pp">|</span></span>
-<span id="cb19-388"><a href="#cb19-388" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`relevel(x, ref = "...")`</span> <span class="pp">|</span> Choose a reference category <span class="pp">|</span></span>
-<span id="cb19-389"><a href="#cb19-389" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`case_when()`</span> / <span class="in">`cut()`</span> <span class="pp">|</span> Construct categories from conditions or breakpoints <span class="pp">|</span></span>
-<span id="cb19-390"><a href="#cb19-390" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`x * group`</span> <span class="pp">|</span> Include both main effects and their interaction <span class="pp">|</span></span>
-<span id="cb19-391"><a href="#cb19-391" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`model.matrix()`</span> <span class="pp">|</span> Inspect the encoded predictors <span class="pp">|</span></span>
-<span id="cb19-392"><a href="#cb19-392" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`count(group)`</span> <span class="pp">|</span> Check group sizes before CV <span class="pp">|</span></span>
-<span id="cb19-393"><a href="#cb19-393" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_join(..., largest = TRUE)`</span> <span class="pp">|</span> Assign the spatial match with the largest overlap <span class="pp">|</span></span>
-<span id="cb19-394"><a href="#cb19-394" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`add_row()`</span> <span class="pp">|</span> Record another model and its CV RMSE <span class="pp">|</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb19-363"><a href="#cb19-363" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Code <span class="pp">|</span> Purpose or check <span class="pp">|</span></span>
+<span id="cb19-364"><a href="#cb19-364" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|</span></span>
+<span id="cb19-365"><a href="#cb19-365" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`log(x)`</span> <span class="pp">|</span> Natural log; requires positive values for finite results <span class="pp">|</span></span>
+<span id="cb19-366"><a href="#cb19-366" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`log1p(x)`</span> <span class="pp">|</span> Compute <span class="in">`log(1 + x)`</span>; accommodates zero counts <span class="pp">|</span></span>
+<span id="cb19-367"><a href="#cb19-367" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`exp(pred)`</span> <span class="pp">|</span> Back-transform a log prediction <span class="pp">|</span></span>
+<span id="cb19-368"><a href="#cb19-368" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`x + I(x^2)`</span> <span class="pp">|</span> Include a linear term and its square <span class="pp">|</span></span>
+<span id="cb19-369"><a href="#cb19-369" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`factor(x)`</span> <span class="pp">|</span> Treat labels as categories <span class="pp">|</span></span>
+<span id="cb19-370"><a href="#cb19-370" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`relevel(x, ref = "...")`</span> <span class="pp">|</span> Choose a reference category <span class="pp">|</span></span>
+<span id="cb19-371"><a href="#cb19-371" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`case_when()`</span> / <span class="in">`cut()`</span> <span class="pp">|</span> Construct categories from conditions or breakpoints <span class="pp">|</span></span>
+<span id="cb19-372"><a href="#cb19-372" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`x * group`</span> <span class="pp">|</span> Include both main effects and their interaction <span class="pp">|</span></span>
+<span id="cb19-373"><a href="#cb19-373" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`model.matrix()`</span> <span class="pp">|</span> Inspect the encoded predictors <span class="pp">|</span></span>
+<span id="cb19-374"><a href="#cb19-374" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`count(group)`</span> <span class="pp">|</span> Check group sizes before CV <span class="pp">|</span></span>
+<span id="cb19-375"><a href="#cb19-375" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`st_join(..., largest = TRUE)`</span> <span class="pp">|</span> Assign the spatial match with the largest overlap <span class="pp">|</span></span>
+<span id="cb19-376"><a href="#cb19-376" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`add_row()`</span> <span class="pp">|</span> Record another model and its CV RMSE <span class="pp">|</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
