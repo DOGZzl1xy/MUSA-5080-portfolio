@@ -1,0 +1,137 @@
+---
+title: "Week 7: Spatial Errors and House Price Prediction"
+description: "Spatial features, residual maps, Moran's I, permutation tests, and honest house-price prediction"
+date: 2026-10-16
+---
+
+## What We Did
+
+This week focused on where a prediction model makes errors, rather than only how large its overall error is. We moved from census-tract analysis to individual house sales and used Philadelphia housing data to explore spatial features and residual patterns.
+
+- Prepared housing data: filtered invalid or unsuitable records and constructed predictors such as living area, bathrooms, and building age.
+
+- Created spatial features: counted crime incidents within a 660-foot buffer around each house and calculated the mean distance to the five nearest incidents.
+
+- Fitted a baseline regression: predicted sale prices using housing characteristics and a spatial crime feature.
+
+- Mapped residuals: examined where the model systematically underestimated or overestimated prices.
+
+- Measured spatial autocorrelation: defined neighboring houses, calculated their average residuals, and used Moran’s I to summarize residual clustering.
+
+- Performed a permutation test: shuffled residuals across fixed locations to assess whether the observed spatial association was unusually strong.
+
+- Introduced the Chicago house-price prediction task: use training-set cross-validation to compare models, construct spatial features, and submit predictions for a separate test set.
+
+## Key Concepts
+
+### 1. Residuals
+
+A residual is the actual value minus the predicted value:
+
+$$
+e_i = y_i - \hat{y}_i
+$$
+
+- **Positive residual:** the model underpredicts.
+- **Negative residual:** the model overpredicts.
+
+For example, if a house sells for $240,000 and the model predicts $285,000, the residual is **−$45,000**. The model overpredicts by $45,000.
+
+### 2. Buffer Counts and kNN Distances
+
+Buffer counts and kNN distances describe nearby conditions in different ways.
+
+| Feature | What is fixed? | What is measured? |
+|---|---|---|
+| Buffer count | Search radius | Number of events inside the radius |
+| Mean kNN distance | Number of nearby events | Average distance to those events |
+
+Two houses may both have zero crimes within a buffer but differ substantially in their distance to the nearest crimes. The kNN feature captures that difference.
+
+Use an appropriate projected CRS and check its units. **660 feet equals 1/8 mile.**
+
+### 3. Spatial Lag and Spatial Weights
+
+A spatial lag summarizes values at neighboring locations. With equally weighted, row-standardized neighbors, it is the average of their values.
+
+For four neighbors with residuals of +40, +20, −10, and −30 thousand dollars:
+
+$$
+\text{Spatial lag} = \frac{40 + 20 - 10 - 30}{4} = 5
+$$
+
+The average neighboring residual is **+$5,000**.
+
+Spatial lag refers to a spatial relationship, not a previous time period. Results depend on the neighbor definition and weighting method.
+
+In this lesson, kNN serves two purposes:
+
+- Finding nearby crime incidents to construct a predictor.
+- Finding nearby houses to diagnose residual patterns.
+
+### 4. Moran’s I
+
+Moran’s I measures spatial association. Applied to residuals, it asks whether neighboring houses tend to have similar deviations from the mean residual.
+
+- **Above the random baseline:** similar residuals tend to cluster.
+- **Near the random baseline:** little overall spatial association under the chosen weights.
+- **Below the random baseline:** neighboring residuals tend to differ.
+
+Residual clustering can suggest omitted local information, an unsuitable model form, or data problems. It does not establish a specific cause.
+
+Moran’s I is neither prediction error in dollars nor the percentage of variation explained. Comparisons require consistent samples and spatial weights.
+
+### 5. Permutation Testing
+
+A permutation test evaluates whether the observed spatial association is unusual under random assignment of values to locations.
+
+The procedure is:
+
+1. Keep locations and spatial weights fixed.
+2. Randomly reassign the observed residuals across locations.
+3. Recalculate Moran’s I.
+4. Repeat and compare the observed statistic with the simulated distribution.
+
+With `nsim = 499`, the function performs 499 permutations. **It does not refit the regression 499 times.**
+
+A small upper-tail p-value indicates that the observed Moran’s I is unusually large under the specified randomization null. It is not the probability that the null hypothesis is true.
+
+### 6. Cross-Validation and RMSE
+
+Cross-validation (CV) evaluates predictions on observations temporarily excluded from model fitting.
+
+In ten-fold CV:
+
+1. Divide the training data into ten folds.
+2. Train on nine folds and predict the remaining fold.
+3. Repeat until every fold has been held out once.
+4. Summarize the held-out prediction errors.
+
+**CV RMSE measures prediction-error magnitude in the outcome’s units.** Moran’s I measures the spatial structure of errors.
+
+A model can have little spatial clustering while still making large prediction errors. Compare models using the same observations and CV folds.
+
+### 7. Target Leakage
+
+Target leakage occurs when held-out outcome information enters model training or feature construction.
+
+For example, calculating neighboring mean sale prices from all observed prices before splitting CV folds can allow validation outcomes to enter features.
+
+For this task, construct spatial predictors from available environmental information, such as crime exposure or transit access, rather than neighboring target prices.
+
+Neighboring residual averages contain outcome information. They are useful for diagnosis but should not be reused as ordinary prediction features.
+
+### 8. Improving and Evaluating the Model
+
+Spatial error patterns can motivate additional features:
+
+| Suspected issue | Possible model change |
+|---|---|
+| Missing local amenities or disamenities | Add accessibility, distance, or buffer features |
+| Overall differences between neighborhoods | Add neighborhood fixed effects |
+| Relationships that vary across places | Add interaction terms |
+| Nonlinear relationships | Add log transformations or polynomial terms |
+
+Evaluate changes using CV RMSE, residual maps, and Moran’s I. A lower training error or smaller Moran’s I alone does not establish better prediction.
+
+Select the model using training-set CV, refit it on the available training data, and predict every required test observation. The separate test set provides the final independent evaluation.
