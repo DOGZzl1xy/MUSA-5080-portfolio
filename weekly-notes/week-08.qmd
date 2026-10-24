@@ -1,0 +1,205 @@
+---
+title: "Week 8: Local Moran's I and LISA"
+description: "Local Moran's I, HH/HL/LH/LL quadrants, and LISA cluster maps as a model diagnostic"
+date: 2026-10-23
+---
+
+## What We Did
+
+Last week, global Moran's I on the residuals told us whether the model's errors cluster. As the model improves, that number should fall. But a single number cannot tell us where the problems are. This week we broke it apart, one house at a time.
+
+- Reviewed global Moran's I on residuals as a diagnostic to track across model versions.
+
+- Worked through a five-house example by hand: residual, deviation from the mean, neighbors' average deviation, and local Moran's I.
+
+- Classified each location into one of four quadrants (HH, HL, LH, LL) and interpreted them as prediction errors.
+
+- Discussed why a LISA value must be read together with its quadrant, its significance, the size of the errors, and a map.
+
+- Odds and ends: the RealPage case on algorithmic rent pricing.
+
+## Key Concepts
+
+### 1. From Global to Local
+
+Global Moran's I asks: across the whole study area, do similar residuals sit next to each other?
+
+Local Moran's I, a **LISA** (Local Indicator of Spatial Association; Anselin, 1995), asks: does this particular location resemble its neighbors?
+
+With row-standardized weights, the global statistic is the average of the local ones:
+
+$$
+I = \frac{1}{n}\sum_{i=1}^{n} I_i
+$$
+
+LISA is therefore a decomposition of the global statistic, not a separate idea.
+
+### 2. The Formula
+
+Let $z_i = e_i - \bar{e}$ be the deviation of location $i$'s residual from the mean residual, and
+
+$$
+m_2 = \frac{1}{n}\sum_{i=1}^{n} z_i^2
+$$
+
+Then
+
+$$
+I_i = \frac{z_i}{m_2}\sum_{j} w_{ij} z_j
+$$
+
+The sum $\sum_j w_{ij} z_j$ is the **spatial lag** of $z$. With row-standardized weights, it is the neighbors' average deviation.
+
+$I_i$ is large and positive when location $i$ and its neighbors deviate strongly **in the same direction**. It is negative when they deviate in opposite directions.
+
+### 3. Worked Example: Five Houses in a Row
+
+Houses A–E sit on a line, and each house's neighbors are the houses directly next to it. All values are in thousands of dollars.
+
+The mean residual is $(100 + 80 + 20 - 50 - 70)/5 = 16$, so $z_i = e_i - 16$.
+
+| House | Residual | Deviation $z_i$ | Neighbors | Spatial lag (neighbors' avg $z$) |
+|---|---|---|---|---|
+| A | +100 | +84 | B | +64 |
+| B | +80 | +64 | A, C | +44 |
+| C | +20 | +4 | B, D | −1 |
+| D | −50 | −66 | C, E | −41 |
+| E | −70 | −86 | D | −66 |
+
+$$
+m_2 = \frac{84^2 + 64^2 + 4^2 + 66^2 + 86^2}{5} = \frac{22{,}920}{5} = 4{,}584
+$$
+
+| House | $z_i \times \text{lag}_i$ | $I_i$ | Quadrant |
+|---|---|---|---|
+| A | $84 \times 64 = 5{,}376$ | 1.17 | High-High |
+| B | $64 \times 44 = 2{,}816$ | 0.61 | High-High |
+| C | $4 \times (-1) = -4$ | 0.00 | Nothing meaningful |
+| D | $(-66) \times (-41) = 2{,}706$ | 0.59 | Low-Low |
+| E | $(-86) \times (-66) = 5{,}676$ | 1.24 | Low-Low |
+
+Check: $(1.17 + 0.61 + 0.00 + 0.59 + 1.24)/5 \approx 0.72$, which equals the global Moran's I for these five houses.
+
+Two points from the example:
+
+- **E has the largest $I_i$, even though A has the largest residual.** $I_i$ rewards agreement with neighbors, not size alone.
+
+- **C is technically High-Low** ($z > 0$, lag $< 0$), but both values are close to zero, so $I_i \approx 0$. A quadrant label without a meaningful $I_i$ is noise.
+
+### 4. The Four Quadrants (Moran Scatterplot)
+
+The Moran scatterplot places $z_i$ on the x-axis and its spatial lag on the y-axis. Each quadrant describes a different pattern:
+
+| Quadrant | Location $i$ | Neighbors | Sign of $I_i$ | Pattern |
+|---|---|---|---|---|
+| High-High (HH) | Above mean | Above mean | + | Hot spot / cluster |
+| Low-Low (LL) | Below mean | Below mean | + | Cold spot / cluster |
+| High-Low (HL) | Above mean | Below mean | − | Spatial outlier |
+| Low-High (LH) | Below mean | Above mean | − | Spatial outlier |
+
+- **Positive $I_i$:** a cluster (HH or LL).
+- **Negative $I_i$:** an outlier (HL or LH).
+
+The sign alone cannot distinguish HH from LL. The quadrant is needed.
+
+### 5. Reading the Quadrants as Errors
+
+When the variable is a residual, "high" and "low" have a specific meaning:
+
+$$
+e_i = y_i - \hat{y}_i
+$$
+
+A high residual means the model **underpredicted**; a low residual means it **overpredicted**.
+
+|  | Neighbors underpredicted | Neighbors overpredicted |
+|---|---|---|
+| **Location $i$ underpredicted** | High-High | High-Low |
+| **Location $i$ overpredicted** | Low-High | Low-Low |
+
+- **HH: a pocket of underprediction.** The model consistently guesses too low here. The area may be worth more than the features suggest because of an unmeasured amenity, a gentrifying block, or a strong school catchment.
+
+- **LL: a pocket of overprediction.** The model consistently guesses too high. Something the model does not see may be pulling prices down, such as vacancy, blight, a nearby disamenity, or a data issue.
+
+- **HL / LH: isolated surprises.** A single house does not match its neighbors, such as a renovated house on a distressed block, a teardown on an expensive block, or a bad record.
+
+Strictly speaking, "high" and "low" are relative to the **mean residual**, not to zero. With OLS and an intercept, the mean residual is zero on the training data, so the two coincide. They can differ on test data or after filtering.
+
+### 6. Reading LISA in Context
+
+A LISA value on its own is not an answer. Read it together with:
+
+1. **The quadrant:** a positive $I_i$ could be HH or LL, which represent opposite problems for the model.
+
+2. **Significance:** a conditional permutation test keeps location $i$'s value fixed, randomly reassigns the remaining values to its neighbors, and recalculates $I_i$. Cluster maps usually show only significant locations.
+
+3. **The size of the residuals:** a strong LL cluster of small overpredictions matters less than a weak cluster of $100,000 errors. LISA measures **pattern**; CV RMSE and MAE measure **magnitude**.
+
+4. **A map:** the cluster map, with quadrant colors and non-significant locations in grey, shows where the patterns are.
+
+Cautions:
+
+- **Multiple testing.** With thousands of houses, roughly 5% may appear significant at $p < 0.05$ by chance alone. Use a stricter cutoff or a false discovery rate (FDR) correction before drawing strong conclusions.
+
+- **Neighbor definitions matter.** Results change with the spatial weights, such as kNN with $k = 5$ versus $k = 10$, contiguity, or distance bands. Report the choice.
+
+- **Clusters are not causes.** An LL cluster shows where the model fails, not why. It indicates where to look for a missing feature.
+
+### 7. Using LISA to Improve the Model
+
+The cluster map can become a feature-engineering checklist:
+
+| What the map shows | Possible next step |
+|---|---|
+| HH cluster (underprediction) | Look for a missing amenity: parks, transit, school quality, or a neighborhood fixed effect |
+| LL cluster (overprediction) | Look for a missing disamenity: vacancy, crime, industrial land, or flood risk |
+| Clusters that follow neighborhood boundaries | Add neighborhood fixed effects |
+| Scattered HL / LH outliers | Check for data errors, non-arm's-length sales, or unusual properties |
+
+After adding features, rerun global Moran's I and the LISA map, and compare CV RMSE using the same folds. A useful change should shrink the clusters **without** worsening out-of-sample error.
+
+### 8. R Workflow
+
+```r
+library(sf)
+library(spdep)
+
+# Residuals from the fitted model
+sales$resid <- residuals(model)
+
+# Neighbors: five nearest houses, row-standardized
+coords <- st_coordinates(sales)
+nb <- knn2nb(knearneigh(coords, k = 5))
+lw <- nb2listw(nb, style = "W")
+
+# Global Moran's I (last week)
+moran.mc(sales$resid, lw, nsim = 499)
+
+# Local Moran's I with a conditional permutation test
+lisa <- localmoran_perm(sales$resid, lw, nsim = 499)
+
+sales$Ii   <- lisa[, "Ii"]
+sales$p    <- lisa[, "Pr(z != E(Ii)) Sim"]
+sales$quad <- attr(lisa, "quadr")$mean   # High-High, Low-Low, High-Low, Low-High
+
+# Keep only significant locations for the cluster map
+sales$cluster <- ifelse(sales$p < 0.05, as.character(sales$quad), "Not significant")
+```
+
+## Odds and Ends: The RealPage Case
+
+RealPage sells revenue-management software that recommends daily rents to landlords. In August 2024, the DOJ and several states sued the company, alleging that the software pooled competing landlords' **nonpublic** data and pushed them toward aligned, higher rents ("algorithmic collusion").
+
+In November 2025, the DOJ announced a proposed settlement with no fines and no admission of wrongdoing. Under its terms, RealPage must:
+
+- Stop using competitors' nonpublic data for real-time recommendations; training data must be at least a year old.
+- Remove features that discouraged rent decreases or aligned prices among competitors.
+- Stop hyper-local pricing.
+
+Several states that had joined the suit were not part of the settlement, and a number of cities, including Philadelphia, have passed their own ordinances restricting rent-setting algorithms.
+
+Why this case belongs in a policy analytics course:
+
+- A pricing model becomes a public-policy actor once enough of the market relies on it.
+- The central issue is less the algorithm itself than **the data it is allowed to see**. This is the same question as target leakage, scaled up to an entire market.
+- Our house-price models ask, "What is this home worth?" RealPage's model asks, "What can this landlord charge?" The tools are similar, but the consequences are very different.
