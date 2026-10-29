@@ -1,0 +1,11 @@
+model,added,cv_rmse,moran_i,notes
+m1,Structure only,281467.6638391211,0.37727203619454364,Establish a house-characteristic baseline.
+m2,Log lot size; size and age quadratics,267870.36575900944,0.4163527673686087,Allow size and age slopes to vary; reduce lot-size skew.
+m3,Year and quarter,267063.01110423903,0.41886804028339697,Capture changes in the market and seasonality.
+m4,Downtown distance and coordinates,235864.21208794034,0.3981837798809346,Represent broad geographic price gradients.
+m5,Ward fixed effects,196399.49206696055,0.20427099698008075,Capture local differences beyond downtown distance.
+m6,Building area by ward,182388.64018811221,0.16990711690823854,Allow the value of additional floor space to vary by location.
+m7,Log robbery count within 660 ft,182372.5703716852,0.16955947138792055,Measure nearby incidents in the preceding available quarter.
+m8,Mean distance to five robberies,182297.0842925519,0.16883484149253833,Distinguish locations with no incidents inside the buffer.
+m9,Log-transform robbery distance,182235.51582569012,0.168275261425445,Test diminishing effects of additional separation.
+m10,Building area by age,181295.29960093793,0.17104912633071473,Allow the area slope to differ between newer and older houses.

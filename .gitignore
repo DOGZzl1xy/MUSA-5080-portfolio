@@ -27,3 +27,7 @@ Thumbs.db
 /.quarto/
 
 **/*.quarto_ipynb
+
+# Assignment 5: large files regenerated on every render
+data/assignment5/features.rds
+data/assignment5/model_results.rds
