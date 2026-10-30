@@ -1,6 +1,6 @@
 ---
 title: "Assignment 5: House Price Prediction, Chicago"
-subtitle: "MUSA 5080 · Team assignment"
+subtitle: "MUSA 5080 · Team Mahjong · North/South model"
 author: "Team Mahjong: Chenyan Zhao, Peirong Luo, Terry Xu, Xuanyu Zhou"
 date: 2026-10-30
 description: "Team Mahjong: predicting Chicago single-family sale prices, 2023–2025, with spatial features and an equity check."
@@ -21,6 +21,7 @@ freeze: false
 
 ```{r}
 #| label: setup
+#| results: hide
 library(tidyverse)
 library(tidycensus)
 library(sf)
@@ -32,590 +33,458 @@ options(scipen = 999, timeout = 300, tigris_use_cache = TRUE)
 theme_set(theme_minimal(base_size = 12))
 knitr::opts_chunk$set(fig.width = 8, fig.height = 5, dpi = 160)
 dollars <- scales::label_dollar(accuracy = 1)
+percent <- scales::label_percent(accuracy = .1)
 dir.create("data/assignment5/figures", recursive = TRUE, showWarnings = FALSE)
 save_plot <- function(plot, name, width = 8, height = 5) {
-  ggsave(file.path("data/assignment5/figures", paste0(name, ".png")),
-         plot, width = width, height = height, dpi = 160, bg = "white")
+  ggsave(file.path("data/assignment5/figures", paste0(name, ".png")), plot,
+         width = width, height = height, dpi = 160, bg = "white")
   plot
 }
 ```
+
+**Team:** Mahjong.
+
+### Data preparation
+
+We combine the supplied house characteristics with location and recent-crime
+features, then compare the models using the same ten validation folds.
+
+```{r}
+#| label: prepare-and-fit
+#| results: hide
+source("data/assignment5/prepare_features.R", local = TRUE)
+source("data/assignment5/fit_models.R", local = TRUE)
+final_row <- model_log %>% filter(model == final_name)
+original_row <- model_log %>% filter(model == "m10")
+ward_lot_row <- model_log %>% filter(model == "E3")
+```
+
+The final model allows the lot-area coefficient to differ between northern and
+southern locations. Its
+mean-fold CV RMSE is **`r dollars(final_row$cv_rmse)`**. The analysis below compares
+its prediction errors and income-group valuation ratios with the earlier models.
 
 ## Part 1: Clean and explore
 
 ### Market-sale sample
 
-I exclude transfers at or below $10,000, multiple-property sales, and records without a valid building area or location. A multiple-property transaction does not identify the price of one home, following the [Cook County Assessor's sales criteria](https://github.com/ccao-data/model-res-avm#types-of-sales-excluded). There is no upper-price cutoff. Missing predictors are filled using training-fold medians.
+We screen out training transfers at or below $10,000, multiple-property sales,
+and records without positive building area or valid coordinates. A transaction
+covering several properties does not identify the value of the one house whose
+features are recorded. There is no upper-price or upper-age cutoff. All test
+records remain, and missing predictors are filled inside each training fold.
 
 ```{r}
-#| label: prepare-data
-#| results: hide
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(sf)
-  library(tidycensus)
-  library(nngeo)
-})
-options(scipen = 999, timeout = 300, tigris_use_cache = TRUE)
-data_dir <- "data/assignment5"
-dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
-
-raw_train <- read_csv("data/assignment5/chicago_train.csv", show_col_types = FALSE)
-raw_test <- read_csv("data/assignment5/chicago_test.csv", show_col_types = FALSE)
-all_sales <- bind_rows(mutate(raw_train, split = "train"),
-                      mutate(raw_test, split = "test")) %>%
-  mutate(sale_date = mdy(sale_date),
-         location_id = paste(lat, lon, sep = "/"),
-         exclusion = case_when(
-           split == "test" ~ "Test",
-           !is.finite(sale_price) | sale_price <= 10000 ~ "Price at or below $10,000",
-           is_multisale == 1 ~ "Multiple-property sale",
-           !is.finite(building_000sf) | building_000sf <= 0 ~ "Invalid building area",
-           !is.finite(lat) | !is.finite(lon) ~ "Missing coordinates",
-           TRUE ~ "Retained"
-         )) %>%
-  st_as_sf(coords = c("lon", "lat"), crs = 4326, remove = FALSE) %>%
-  st_transform(3435)
-
-cleaning_log <- tibble(
-  rule = c("Price at or below $10,000", "Multiple-property sale",
-           "Invalid building area", "Missing coordinates"),
-  reason = c("Remove nominal transfers", "Price covers more than one property",
-             "Require a positive residential building area", "Require a location")
-) %>%
-  left_join(st_drop_geometry(all_sales) %>% count(exclusion),
-            by = c("rule" = "exclusion")) %>%
-  mutate(removed = replace_na(n, 0L),
-         remaining = nrow(raw_train) - cumsum(removed)) %>% select(-n)
-
-# Save fixed external responses so subsequent renders use the same inputs.
-ward_file <- file.path(data_dir, "wards_2023.rds")
-if (!file.exists(ward_file)) {
-  wards <- st_read(paste0("https://data.cityofchicago.org/resource/",
-                          "p293-wvbd.geojson?$limit=100"), quiet = TRUE)
-  saveRDS(wards, ward_file)
-}
-wards <- readRDS(ward_file) %>% st_transform(3435) %>%
-  select(ward) %>% mutate(ward = as.integer(ward)) %>% arrange(ward)
-
-income_file <- file.path(data_dir, "acs_2023_tracts.rds")
-if (!file.exists(income_file)) {
-  tracts <- get_acs(geography = "tract", state = "IL", county = "Cook",
-                    variables = c(income = "B19013_001"), year = 2023,
-                    survey = "acs5", geometry = TRUE, output = "wide")
-  saveRDS(tracts, income_file)
-}
-tracts <- readRDS(income_file) %>% st_transform(3435) %>%
-  mutate(incomeE = if_else(incomeE > 0, incomeE, NA_real_))
-
-# One polygon per sale, including small coordinate/boundary discrepancies.
-ward_matches <- st_intersects(all_sales, wards)
-ward_index <- vapply(ward_matches, function(x) if (length(x)) x[1] else NA_integer_, 1L)
-missing_ward <- is.na(ward_index)
-ward_index[missing_ward] <- st_nearest_feature(all_sales[missing_ward, ], wards)
-all_sales$ward <- wards$ward[ward_index]
-all_sales$ward_gap_ft <- 0
-all_sales$ward_gap_ft[missing_ward] <- as.numeric(st_distance(
-  all_sales[missing_ward, ], wards[ward_index[missing_ward], ], by_element = TRUE))
-
-tract_matches <- st_intersects(all_sales, tracts)
-tract_index <- vapply(tract_matches, function(x) if (length(x)) x[1] else NA_integer_, 1L)
-all_sales$GEOID <- tracts$GEOID[tract_index]
-all_sales$income <- tracts$incomeE[tract_index]
-all_sales$income_moe <- tracts$incomeM[tract_index]
-
-# Merge sparse wards using geography and training counts, without sale prices.
-ward_counts <- all_sales %>% filter(exclusion == "Retained") %>%
-  st_drop_geometry() %>% count(ward)
-common_wards <- ward_counts %>% filter(n >= 80) %>% pull(ward)
-centers <- st_point_on_surface(wards)
-ward_map <- tibble(ward = wards$ward, model_ward = wards$ward)
-rare <- !ward_map$ward %in% common_wards
-ward_map$model_ward[rare] <- common_wards[st_nearest_feature(
-  centers[rare, ], centers[match(common_wards, wards$ward), ])]
-all_sales$model_ward <- factor(ward_map$model_ward[match(all_sales$ward, ward_map$ward)])
-
-# Distances are measured in miles from a fixed downtown reference point.
-downtown <- st_sfc(st_point(c(-87.6319, 41.8838)), crs = 4326) %>% st_transform(3435)
-xy <- st_coordinates(all_sales)
-origin <- st_coordinates(downtown)[1, ]
-all_sales <- all_sales %>% mutate(
-  east_mi = (xy[, 1] - origin[1]) / 5280,
-  north_mi = (xy[, 2] - origin[2]) / 5280,
-  downtown_mi = as.numeric(st_distance(all_sales, downtown)) / 5280,
-  year_f = factor(year), quarter_f = factor(sale_qrt),
-  crime_window_end = as.Date(floor_date(sale_date - days(7), "quarter")),
-  crime_window_start = crime_window_end %m-% months(3),
-  crime_unavailable = as.integer(crime_window_start < as.Date("2023-01-01")),
-  robbery_660ft = NA_real_, robbery_knn5_mi = NA_real_
-)
-
-crime_file <- file.path(data_dir, "robbery_2023_2025.csv")
-if (!file.exists(crime_file)) {
-  query <- list(
-    "$where" = paste("date >= '2023-01-01T00:00:00'",
-                     "AND date < '2025-10-01T00:00:00' AND primary_type = 'ROBBERY'"),
-    "$select" = "id,date,latitude,longitude,updated_on",
-    "$order" = "date,id", "$limit" = "100000")
-  response <- httr::GET("https://data.cityofchicago.org/resource/ijzp-q8t2.csv",
-                         query = query, httr::timeout(300))
-  httr::stop_for_status(response)
-  writeBin(httr::content(response, as = "raw"), crime_file)
-  writeLines(response$url, file.path(data_dir, "robbery_query.txt"))
-}
-crime_raw <- read_csv(crime_file, show_col_types = FALSE)
-robbery <- crime_raw %>% filter(is.finite(latitude), is.finite(longitude)) %>%
-  mutate(event_date = as.Date(date)) %>%
-  st_as_sf(coords = c("longitude", "latitude"), crs = 4326) %>% st_transform(3435)
-crime_coverage <- tibble()
-for (end_text in as.character(sort(unique(all_sales$crime_window_end[all_sales$crime_unavailable == 0])))) {
-  end <- as.Date(end_text)
-  start <- end %m-% months(3)
-  rows <- which(all_sales$crime_window_end == end & all_sales$crime_unavailable == 0)
-  incidents <- robbery %>% filter(event_date >= start, event_date < end)
-  all_sales$robbery_660ft[rows] <- lengths(st_intersects(
-    st_buffer(all_sales[rows, ], 660), incidents))
-  nearest <- nngeo::st_nn(all_sales[rows, ], incidents, k = 5,
-                          returnDist = TRUE, progress = FALSE)
-  all_sales$robbery_knn5_mi[rows] <- vapply(nearest$dist, mean, numeric(1)) / 5280
-  crime_coverage <- bind_rows(crime_coverage, tibble(
-    start = start, end = end, incidents = nrow(incidents), houses = length(rows)))
-}
-
-train_raw <- all_sales %>% filter(exclusion == "Retained")
-test_raw <- all_sales %>% filter(split == "test")
-stopifnot(nrow(all_sales) == nrow(raw_train) + nrow(raw_test),
-          nrow(test_raw) == nrow(raw_test), !anyDuplicated(all_sales$id),
-          all(all_sales$crime_window_end <= all_sales$sale_date - 7))
-saveRDS(list(all_sales = all_sales, train_raw = train_raw, test_raw = test_raw,
-             wards = wards, tracts = tracts, cleaning_log = cleaning_log,
-             ward_map = ward_map, ward_counts = ward_counts,
-             crime_coverage = crime_coverage,
-             crime_missing_coordinates = sum(is.na(crime_raw$latitude)),
-             crime_records = nrow(crime_raw)), file.path(data_dir, "features.rds"))
-write_csv(cleaning_log, file.path(data_dir, "cleaning_log.csv"))
-write_csv(crime_coverage, file.path(data_dir, "crime_coverage.csv"))
-cat("Feature rows:", nrow(all_sales), "Training:", nrow(train_raw), "Test:", nrow(test_raw), "\n")
-cat("Ward matches repaired:", sum(missing_ward), "Max gap (ft):", max(all_sales$ward_gap_ft), "\n")
-cat("Missing income:", sum(is.na(train_raw$income)), "\n")
-
-```
-
-```{r}
-#| label: cleaning-table
-cleaning_log %>%
-  gt() %>% cols_label(rule = "Rule", reason = "Reason", removed = "Removed",
-                     remaining = "Remaining") %>%
+#| label: cleaning-log
+features$cleaning_log %>% gt() %>%
+  cols_label(rule = "Rule", reason = "Reason", removed = "Removed", remaining = "Remaining") %>%
   fmt_number(columns = c(removed, remaining), decimals = 0)
 ```
 
-The analysis retains **`r scales::comma(nrow(train_raw))` training sales**. All **`r scales::comma(nrow(test_raw))` test rows** remain. Of the retained sales, `r sum(train_raw$sale_price < 50000)` are below $50,000 and `r sum(train_raw$sale_price > 2000000)` exceed $2 million.
+The rules retain **`r scales::comma(nrow(train_raw))` training sales** out of 23,200.
+All 1,232 actual exclusions are multiple-property transactions; the other rules
+remove no records in these supplied files. We predict all
+**`r scales::comma(nrow(test_raw))` test houses**. The test set still includes
+**`r sum(test_raw$is_multisale == 1)` multiple-property transactions**, so CV on
+retained single-property sales does not directly validate that subgroup.
 
 ### Exploration
 
 ```{r}
 #| label: price-distribution
-#| fig-alt: "Histogram of sale prices with a logarithmic dollar axis, showing the long upper tail."
+#| fig-alt: "Distribution of retained training prices on a logarithmic dollar axis."
 p_price <- ggplot(train_raw, aes(sale_price)) +
   geom_histogram(bins = 45, fill = "#2c7fb8", color = "white") +
   scale_x_log10(labels = scales::label_dollar()) +
-  labs(title = "Sale prices have a long upper tail", x = "Sale price (log scale)",
-       y = "Sales")
+  labs(title = "Sale prices have a long upper tail", x = "Sale price (log axis)", y = "Sales")
 save_plot(p_price, "price_distribution")
 ```
+
+The plot uses a log axis for display; the regression outcome stays in dollars.
 
 ```{r}
 #| label: price-map
 #| fig-height: 7
-#| fig-alt: "Map of Chicago sales colored by sale price. Higher prices cluster north of downtown and near the lake."
+#| fig-alt: "Chicago retained training sales colored by price."
 p_map <- ggplot() +
-  geom_sf(data = wards, fill = "#f7f7f7", color = "#cccccc", linewidth = 0.15) +
-  geom_sf(data = train_raw, aes(color = sale_price), size = 0.35, alpha = 0.7) +
-  scale_color_viridis_c(trans = "log10", labels = scales::label_dollar(),
-                        name = "Sale price", option = "C") +
-  coord_sf(datum = NA) + labs(title = "Price varies sharply across Chicago") +
+  geom_sf(data = features$wards, fill = "#f7f7f7", color = "#cccccc", linewidth = .15) +
+  geom_sf(data = train_raw, aes(color = sale_price), size = .35, alpha = .7) +
+  scale_color_viridis_c(trans = "log10", labels = scales::label_dollar(), name = "Price", option = "C") +
+  coord_sf(datum = NA) + labs(title = "Location is strongly associated with price") +
   theme(panel.grid = element_blank())
 save_plot(p_map, "price_map", height = 7)
 ```
 
 ```{r}
 #| label: size-price
-#| fig-alt: "Scatterplot of building area and sale price with a quadratic fitted curve."
+#| fig-alt: "Building area and training sale price, with a descriptive quadratic curve."
 p_size <- ggplot(train_raw, aes(building_000sf, sale_price)) +
-  geom_point(alpha = 0.18, size = 0.7, color = "#2c7fb8") +
-  geom_smooth(method = "lm", formula = y ~ x + I(x^2), se = FALSE,
-              color = "#b35806") +
+  geom_point(alpha = .18, size = .7, color = "#2c7fb8") +
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2), se = FALSE, color = "#b35806") +
   scale_y_continuous(labels = scales::label_dollar(scale = 1e-6, suffix = "m")) +
-  labs(title = "Larger houses have a wider range of prices",
-       x = "Building area (1,000 square feet)", y = "Sale price")
+  labs(title = "Larger houses have a wider range of prices", x = "Building area (1,000 sq ft)", y = "Price")
 save_plot(p_size, "size_price")
 ```
 
 ```{r}
 #| label: age-price
-#| fig-alt: "Median sale price by decade of building age, showing a nonlinear age pattern."
+#| fig-alt: "Median price by decade of age, with all houses age 150 and older pooled."
 age_summary <- train_raw %>% st_drop_geometry() %>%
-  mutate(age_bin = floor(building_age / 10) * 10) %>%
-  group_by(age_bin) %>% summarize(n = n(), median_price = median(sale_price),
-                                 .groups = "drop")
+  mutate(age_bin = if_else(building_age >= 150, 150, floor(building_age / 10) * 10)) %>%
+  group_by(age_bin) %>% summarize(n = n(), median_price = median(sale_price), .groups = "drop")
 p_age <- ggplot(age_summary, aes(age_bin, median_price)) +
   geom_line(color = "#2c7fb8") + geom_point(aes(size = n), color = "#2c7fb8") +
+  scale_x_continuous(breaks = seq(0, 150, 30),
+    labels = function(x) ifelse(x == 150, "150+", as.character(x))) +
   scale_y_continuous(labels = scales::label_dollar()) +
-  labs(title = "Price does not decline uniformly with age",
-       x = "Building age (start of 10-year band)", y = "Median sale price", size = "Sales")
+  labs(title = "Age patterns are nonlinear, but the oldest tail is sparse",
+       x = "Age group (start of decade)", y = "Median price", size = "Sales")
 save_plot(p_age, "age_price")
 ```
 
-The price map motivates location effects. The size plot suggests a nonlinear area term and different area slopes across locations. The age pattern supports a quadratic term. I keep the expensive houses because they are part of the prediction task; their large dollar errors will have a strong influence on RMSE.
+There is only one sale in the original 170–179-year group. We pool ages 150 and
+above for display so that one transaction is not presented as a stable age trend.
+No old houses are removed from modeling. The descriptive tail alone does not justify a quadratic specification.
+
+The price map motivates place effects. The area plot motivates nonlinear terms
+and location-specific area slopes. We also examine low-income overvaluation using out-of-fold predictions.
+We retain legitimate expensive houses because they are part of the prediction
+task and can strongly affect dollar RMSE.
 
 ## Part 2: Build the model
 
-### Features
+### Predictors and validation
 
 | Feature | Construction |
 |---|---|
-| Structure | Building area, age, lot size, bedrooms, bathrooms, fireplaces, garage, air conditioning, stories, basement, exterior, and furnace |
-| Transformations | Log lot area; squared building area and age |
-| Time | Year and calendar-quarter indicators |
-| Broad location | Distance to the downtown reference point, its square, and east/north coordinates in miles |
-| Local location | Spatial join to 2023 wards; building area × ward interactions |
-| Robbery count | Log of one plus incidents within 660 feet during the previous complete quarter |
-| Robbery distance | Mean distance to the five nearest incidents in that quarter, also tested as `log1p(distance)` |
-| Final interaction | Building area × building age |
+| House structure | Area, age, lot size, bedrooms, bathrooms, fireplace, garage, air conditioning, stories, basement, exterior and furnace |
+| Transformations | Log lot area; squared area, age and downtown distance |
+| Time | Year and quarter indicators |
+| Broad location | Distance and east/north coordinates relative to downtown |
+| Ward | 2023 Ward fixed effects and area-by-Ward interactions; sparse Wards merged geographically |
+| Robbery exposure | Log count within 660 ft and log mean distance to five recent events |
+| North/South | Main effect and log-lot interaction at projected `north_mi = 0` |
 
-The [2023 ward boundaries](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Wards-2023-/p293-wvbd) define fixed geographic zones. Wards with fewer than 80 retained training sales are merged with the nearest adequately represented ward: 34 → 27, 42 → 2, and 46 → 44. The `r sum(all_sales$ward_gap_ft > 0)` points outside a ward polygon use the nearest ward; the largest gap is `r round(max(all_sales$ward_gap_ft))` feet.
+Ward boundaries are the 2023 geography. Crime features use events from 2023–2025
+in the preceding available complete quarter, ending at least seven days before
+sale. Early-2023 houses have unavailable crime history within the allowed window;
+their values are imputed and flagged. The current historical crime extract may
+include later revisions: an earlier event date does not establish that the same
+record version was available at sale time. Income is only a retrospective diagnostic.
 
-The [Chicago robbery records](https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2) cover January 2023 through September 2025. Each house uses a complete preceding quarter ending at least seven days before its sale date. Early-2023 houses have no permitted earlier window, so both crime features are filled from the training fold and flagged as unavailable. Of `r scales::comma(nrow(crime_raw))` downloaded events, `r sum(is.na(crime_raw$latitude))` lack coordinates. The portal supplies a current extract of historical events, not archived releases.
+We use the original fixed ten folds (seed 5080), grouping identical coordinates.
+All models use identical retained rows, folds and five-neighbor row-standardized
+spatial weights. Imputation medians are learned only in each analysis fold. No features use neighboring prices, held-out prices or residuals.
 
-### Cross-validation
+### Sequential model development
 
-I use ten fixed folds, with seed 5080. Sales at identical coordinates stay in the same fold because the files do not contain parcel IDs. Every candidate uses the same retained rows and folds. Medians are learned inside each training fold, then applied to its held-out rows. The log reports mean fold RMSE and Moran's I of out-of-fold residuals using five nearest sales and row-standardized weights.
+Models m1–m10 form a step-by-step sequence. Each model adds or changes predictors
+in the preceding model, starting with house characteristics in m1 and ending
+with the original full model, m10.
 
 ```{r}
-#| label: fit-models
-#| results: hide
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(sf)
-  library(caret)
-  library(spdep)
-})
-features <- readRDS("data/assignment5/features.rds")
-train_raw <- features$train_raw
-test_raw <- features$test_raw
-
-impute_vars <- c("lotsize_acre", "num_half_baths", "num_fireplaces", "garage_size",
-                 "full_basement", "warmairfurnace", "robbery_660ft", "robbery_knn5_mi")
-learn_fill <- function(data) {
-  vapply(st_drop_geometry(data)[impute_vars], median, numeric(1), na.rm = TRUE)
-}
-prepare <- function(data, fill) {
-  data <- st_drop_geometry(data)
-  for (v in names(fill)) data[[v]][is.na(data[[v]])] <- fill[[v]]
-  data %>% mutate(age_decade = building_age / 10,
-                 log_lot = log(lotsize_acre),
-                 log_size = log(building_000sf),
-                 log_robbery = log1p(robbery_660ft),
-                 log_knn5 = log1p(robbery_knn5_mi))
-}
-
-# Keep every record at an identical coordinate in the same validation fold.
-set.seed(5080)
-locations <- unique(train_raw$location_id)
-location_folds <- createFolds(seq_along(locations), k = 10, returnTrain = FALSE)
-location_fold <- integer(length(locations))
-for (k in seq_along(location_folds)) location_fold[location_folds[[k]]] <- k
-fold_id <- location_fold[match(train_raw$location_id, locations)]
-fold_data <- lapply(1:10, function(k) {
-  fill <- learn_fill(train_raw[fold_id != k, ])
-  list(analysis = prepare(train_raw[fold_id != k, ], fill),
-       assessment = prepare(train_raw[fold_id == k, ], fill),
-       rows = which(fold_id == k), fill = fill)
-})
-
-# Moran's I uses five neighboring sales, including co-located sales, but never self.
-xy <- st_coordinates(train_raw)
-nn <- nngeo::st_nn(train_raw, train_raw, k = 6, progress = FALSE)
-neighbor_matrix <- t(vapply(seq_along(nn), function(i) {
-  as.integer(head(setdiff(nn[[i]], i), 5))
-}, integer(5)))
-knn <- list(nn = neighbor_matrix, np = nrow(xy), k = 5, dimension = 2, x = xy)
-class(knn) <- "knn"
-weights <- nb2listw(knn2nb(knn), style = "W")
-moran_i <- function(e) unname(moran(e, weights, length(e), Szero(weights))$I)
-
-f1 <- sale_price ~ building_000sf + age_decade + lotsize_acre + num_bedrooms +
-  num_full_baths + num_half_baths + num_fireplaces + garage_size + central_air +
-  one_story + full_basement + finished_basement + brick_stone_ext + warmairfurnace
-f2 <- update(f1, . ~ . - lotsize_acre + log_lot + I(building_000sf^2) + I(age_decade^2))
-f3 <- update(f2, . ~ . + year_f + quarter_f)
-f4 <- update(f3, . ~ . + downtown_mi + I(downtown_mi^2) + east_mi + north_mi)
-f5 <- update(f4, . ~ . + model_ward)
-f6 <- update(f5, . ~ . + building_000sf:model_ward)
-f7 <- update(f6, . ~ . + log_robbery + crime_unavailable)
-f8 <- update(f7, . ~ . + robbery_knn5_mi)
-f9 <- update(f8, . ~ . - robbery_knn5_mi + log_knn5)
-f10 <- update(f9, . ~ . + building_000sf:age_decade)
-formulas <- list(m1 = f1, m2 = f2, m3 = f3, m4 = f4, m5 = f5,
-                 m6 = f6, m7 = f7, m8 = f8, m9 = f9, m10 = f10)
-added <- c("Structure only", "Log lot size; size and age quadratics",
-           "Year and quarter", "Downtown distance and coordinates",
-           "Ward fixed effects", "Building area by ward",
-           "Log robbery count within 660 ft", "Mean distance to five robberies",
-           "Log-transform robbery distance", "Building area by age")
-notes <- c("Establish a house-characteristic baseline.",
-           "Allow size and age slopes to vary; reduce lot-size skew.",
-           "Capture changes in the market and seasonality.",
-           "Represent broad geographic price gradients.",
-           "Capture local differences beyond downtown distance.",
-           "Allow the value of additional floor space to vary by location.",
-           "Measure nearby incidents in the preceding available quarter.",
-           "Distinguish locations with no incidents inside the buffer.",
-           "Test diminishing effects of additional separation.",
-           "Allow the area slope to differ between newer and older houses.")
-
-model_log <- tibble()
-oof <- list()
-fold_scores <- tibble()
-for (j in seq_along(formulas)) {
-  name <- names(formulas)[j]
-  prediction <- rep(NA_real_, nrow(train_raw))
-  scores <- numeric(10)
-  for (k in 1:10) {
-    fold <- fold_data[[k]]
-    fit <- lm(formulas[[j]], data = fold$analysis, na.action = na.fail)
-    stopifnot(fit$rank == length(coef(fit)))
-    prediction[fold$rows] <- predict(fit, newdata = fold$assessment)
-    scores[k] <- sqrt(mean((fold$assessment$sale_price - prediction[fold$rows])^2))
-  }
-  stopifnot(all(is.finite(prediction)))
-  oof[[name]] <- prediction
-  model_log <- bind_rows(model_log, tibble(
-    model = name, added = added[j], cv_rmse = mean(scores),
-    moran_i = moran_i(train_raw$sale_price - prediction), notes = notes[j]))
-  fold_scores <- bind_rows(fold_scores, tibble(model = name, fold = 1:10, rmse = scores))
-  cat(name, "CV RMSE:", round(mean(scores), 2), "Moran I:", round(tail(model_log$moran_i, 1), 4), "\n")
-}
-final_name <- model_log$model[which.min(model_log$cv_rmse)]
-f_final <- formulas[[final_name]]
-fill_final <- learn_fill(train_raw)
-train <- prepare(train_raw, fill_final)
-test <- prepare(test_raw, fill_final)
-m_final <- lm(f_final, data = train, na.action = na.fail)
-predictor_vars <- all.vars(delete.response(terms(f_final)))
-stopifnot(all(complete.cases(test[predictor_vars])), m_final$rank == length(coef(m_final)))
-preds <- tibble(id = test$id, pred = as.numeric(predict(m_final, newdata = test)))
-stopifnot(identical(preds$id, test_raw$id), nrow(preds) == 5789,
-          !anyDuplicated(preds$id), all(is.finite(preds$pred)))
-
-diagnostics <- train_raw %>% mutate(
-  fold = fold_id, pred_baseline = oof$m1, pred_final = oof[[final_name]],
-  residual_baseline = sale_price - pred_baseline,
-  residual_final = sale_price - pred_final,
-  ratio = pred_final / sale_price,
-  income_group = cut(income, c(-Inf, 50000, 75000, 100000, Inf),
-                     labels = c("Under $50k", "$50k–75k", "$75k–100k", "$100k+")))
-write_csv(model_log, "data/assignment5/model_log.csv")
-write_csv(fold_scores, "data/assignment5/fold_scores.csv")
-write_csv(st_drop_geometry(diagnostics) %>% select(
-  id, location_id, fold, sale_price, pred_baseline, pred_final,
-  residual_baseline, residual_final, ratio, ward, model_ward,
-  income, income_moe, income_group), "data/assignment5/out_of_fold_predictions.csv")
-write_csv(preds, "data/assignment5/assignment5_predictions.csv")
-saveRDS(list(model_log = model_log, fold_scores = fold_scores, formulas = formulas,
-             final_name = final_name, f_final = f_final, m_final = m_final,
-             fill_final = fill_final, diagnostics = diagnostics,
-             train = train, test = test, preds = preds, fold_id = fold_id,
-             weights = weights), "data/assignment5/model_results.rds")
-cat("Final model:", final_name, "\n")
-
+#| label: original-model-log
+model_log %>% filter(model %in% paste0("m", 1:10)) %>%
+  select(model, added, cv_rmse, moran_i, notes) %>% gt() %>%
+  cols_label(model = "Model", added = "Added / changed", cv_rmse = "CV RMSE",
+    moran_i = "Moran's I", notes = "Reason") %>%
+  fmt_currency(columns = cv_rmse, decimals = 0) %>% fmt_number(columns = moran_i, decimals = 4)
 ```
 
+### Alternative model specifications
+
+These models test separate alternatives rather than a sequence of additions.
+E1–E4 each modify m10. NS adds a North/South indicator and a log-lot-area
+interaction to m10, allowing the lot-area coefficient to differ by region.
+
 ```{r}
-#| label: model-log
-model_log %>% gt() %>%
-  cols_label(model = "Model", added = "Change", cv_rmse = "CV RMSE",
-             moran_i = "Moran's I", notes = "Reason") %>%
-  fmt_currency(columns = cv_rmse, decimals = 0) %>%
-  fmt_number(columns = moran_i, decimals = 3) %>%
-  tab_options(table.font.size = px(12), data_row.padding = px(6))
+#| label: alternative-model-log
+model_log %>% filter(startsWith(model, "E") | model == "NS") %>%
+  select(model, added, cv_rmse, moran_i, notes) %>% gt() %>%
+  cols_label(model = "Model", added = "Added / changed", cv_rmse = "CV RMSE",
+    moran_i = "Moran's I", notes = "Reason") %>%
+  fmt_currency(columns = cv_rmse, decimals = 0) %>% fmt_number(columns = moran_i, decimals = 4)
 ```
 
 ## Part 3: Final model
 
-The final specification is **`r final_name`**, with the lowest mean fold RMSE: **`r dollars(min(model_log$cv_rmse))`**. This is a **`r sprintf('%.1f', 100 * (1 - min(model_log$cv_rmse) / model_log$cv_rmse[1]))`%** improvement over the structure-only baseline. The outcome remains in dollars.
+The selected model is **NS**, with mean-fold RMSE **`r dollars(final_row$cv_rmse)`**
+and pooled OOF RMSE **`r dollars(final_row$pooled_oof_rmse)`**. Its mean-fold RMSE
+is **`r percent(1 - final_row$cv_rmse / original_row$cv_rmse)`** lower than original m10
+and **`r percent(1 - final_row$cv_rmse / model_log$cv_rmse[model_log$model == 'm1'])`**
+lower than the structure-only baseline. These two RMSE summaries have different
+aggregation rules and are labeled separately.
+
+```{r}
+#| label: comparison-table
+comparison %>% select(model, cv_rmse, pooled_oof_rmse, moran_i,
+                      oof_negative, test_negative, test_min) %>% gt() %>%
+  cols_label(model = "Model", cv_rmse = "Mean-fold RMSE", pooled_oof_rmse = "Pooled RMSE",
+    moran_i = "Moran's I", oof_negative = "OOF negatives", test_negative = "Test negatives",
+    test_min = "Minimum test prediction") %>%
+  fmt_currency(columns = c(cv_rmse, pooled_oof_rmse, test_min), decimals = 0) %>%
+  fmt_number(columns = moran_i, decimals = 4)
+```
+
+NS reduces RMSE and residual clustering compared with m10, and decreases negative
+predictions from 56 to 10 in cross-validation and from 12 to 2 in the test set.
+E3 has a lower RMSE but produces an extreme negative test prediction of about
+**`r dollars(ward_lot_row$test_min)`**. We choose NS as a simpler geographic adjustment,
+while recognizing that its low-income valuation ratios are slightly worse than m10's.
 
 ```{r}
 #| label: final-formula
-f_final
+#| eval: false
+#| code-fold: false
+# Predict sale price in dollars; R includes an intercept by default.
+f_final <- sale_price ~
+  # Building area (1,000 sq ft) and age (decades).
+  building_000sf + age_decade +
+  # Room counts, amenities, and building characteristics.
+  num_bedrooms + num_full_baths + num_half_baths +
+  num_fireplaces + garage_size + central_air + one_story +
+  full_basement + finished_basement + brick_stone_ext + warmairfurnace +
+  # Natural log of lot area; squared terms allow curved area and age effects.
+  log_lot + I(building_000sf^2) + I(age_decade^2) +
+  # Sale-year and quarter indicators capture market changes and seasonality.
+  year_f + quarter_f +
+  # Distance to downtown and signed east/north coordinates, in miles.
+  downtown_mi + I(downtown_mi^2) + east_mi + north_mi +
+  # Ward indicators allow different baseline prices across Wards.
+  model_ward +
+  # log(1 + nearby robbery count), unavailable-history flag,
+  # and log(1 + mean distance to the five nearest recent robberies).
+  log_robbery + crime_unavailable + log_knn5 +
+  # North/South indicator allows different regional baseline prices.
+  lot_zone +
+  # The area coefficient may differ across Wards.
+  building_000sf:model_ward +
+  # The area coefficient may change with building age.
+  building_000sf:age_decade +
+  # The log-lot coefficient may differ between North and South.
+  log_lot:lot_zone
 ```
+
+The North/South boundary is fixed at `north_mi = 0`, relative to downtown.
+Both regions are estimated in one regression. The interaction allows the log-lot
+coefficient to differ between regions while sharing the other model terms.
 
 ```{r}
 #| label: selected-coefficients
-coef_table <- broom::tidy(m_final) %>%
-  filter(term %in% c("num_full_baths", "num_half_baths", "central_air",
-                     "log_lot", "I(building_000sf^2)", "I(age_decade^2)",
-                     "log_robbery", "log_knn5", "building_000sf:age_decade")) %>%
-  select(term, estimate, std.error)
-coef_table %>% gt() %>%
-  cols_label(term = "Term", estimate = "Coefficient", std.error = "Standard error") %>%
-  fmt_number(columns = c(estimate, std.error), decimals = 1) %>%
-  tab_header(title = "Selected coefficients", subtitle = "Full retained training sample")
-write_csv(broom::tidy(m_final), "data/assignment5/final_coefficients.csv")
+all_coefficients[[final_name]] %>% filter(term %in% c("num_full_baths", "num_bedrooms",
+  "log_lot", "lot_zoneSouth", "log_lot:lot_zoneSouth", "building_000sf:age_decade")) %>%
+  gt() %>% fmt_number(columns = estimate, decimals = 1)
+bath_coefficient <- coef(m_final)[["num_full_baths"]]
 ```
 
-Ward effects produced the largest single reduction, from **`r dollars(model_log$cv_rmse[4])` to `r dollars(model_log$cv_rmse[5])`**. Allowing the area slope to vary by ward reduced RMSE by another **`r dollars(model_log$cv_rmse[5] - model_log$cv_rmse[6])`**. Crime features were disappointing: the count and distance terms together improved m6 by only **`r dollars(model_log$cv_rmse[6] - model_log$cv_rmse[9])`**. The area–age interaction added a further **`r dollars(model_log$cv_rmse[9] - model_log$cv_rmse[10])`** improvement.
+### Baseline and final residual maps
 
 ```{r}
 #| label: residual-maps
 #| fig-height: 7
-#| fig-alt: "Side-by-side maps of out-of-fold residuals from the baseline and final models on the same color scale."
-residual_maps <- diagnostics %>%
-  select(id, residual_baseline, residual_final) %>%
-  pivot_longer(starts_with("residual_"), names_to = "model", values_to = "residual") %>%
-  mutate(model = factor(model, levels = c("residual_baseline", "residual_final"),
-                         labels = c("Baseline", "Final")))
+#| fig-alt: "Structure-only baseline and final North/South model out-of-fold residuals on the same color scale."
+residual_map <- bind_rows(
+  diagnostics %>% select(id) %>% mutate(model = "Structure-only baseline (m1)", residual = diagnostics$residual_baseline),
+  diagnostics %>% select(id) %>% mutate(model = "Final North/South model (NS)", residual = diagnostics$residual_final)) %>%
+  mutate(model = factor(model, levels = c("Structure-only baseline (m1)", "Final North/South model (NS)")))
 p_residual <- ggplot() +
-  geom_sf(data = wards, fill = "#f7f7f7", color = "#d8d8d8", linewidth = 0.1) +
-  geom_sf(data = residual_maps, aes(color = residual), size = 0.3, alpha = 0.65) +
-  scale_color_gradient2(low = "#b2182b", mid = "#f7f7f7", high = "#2166ac",
-                         limits = c(-500000, 500000), breaks = c(-500000, 0, 500000),
-                         oob = scales::squish,
-                         labels = scales::label_dollar(scale = 1e-3, suffix = "k"),
-                         name = "Actual − predicted",
-                         guide = guide_colorbar(barwidth = grid::unit(9, "cm"),
-                                                title.position = "top")) +
+  geom_sf(data = features$wards, fill = "#f7f7f7", color = "#cccccc", linewidth = .1) +
+  geom_sf(data = residual_map, aes(color = residual), size = .3, alpha = .65) +
+  scale_color_gradient2(low = "#2166ac", mid = "#f7f7f7", high = "#b2182b",
+    limits = c(-500000, 500000), breaks = c(-500000, 0, 500000), oob = scales::squish,
+    labels = scales::label_dollar(scale = 1e-3, suffix = "k"), name = "Actual - predicted",
+    guide = guide_colorbar(barwidth = grid::unit(9, "cm"), title.position = "top")) +
   facet_wrap(~model) + coord_sf(datum = NA) +
-  labs(title = "Location features reduce clustered errors",
-       caption = "Blue: underprediction. Red: overprediction. Colors capped at ±$500,000; all sales shown.") +
+  labs(title = "Place features reduce, but do not remove, spatial errors",
+    caption = "Red: underprediction. Blue: overprediction. Colors capped at +/-$500,000.") +
   theme(legend.position = "bottom", panel.grid = element_blank())
-save_plot(p_residual, "residual_maps", height = 7)
+save_plot(p_residual, "residual_maps", width = 10, height = 7)
 ```
 
-Moran's I falls from **`r sprintf('%.3f', model_log$moran_i[1])` to `r sprintf('%.3f', tail(model_log$moran_i, 1))`**. The broad north-side underprediction and south-side overprediction weaken. Local clusters remain, and m10 has slightly more residual clustering than m9 despite its lower RMSE.
+Moran's I falls from **`r sprintf('%.3f', original_row$moran_i)`** for m10 to
+**`r sprintf('%.3f', final_row$moran_i)`** for NS. Positive residual clustering remains;
+this statistic describes spatial errors, not a significance test.
 
 ## Part 4: Where it fails, and who pays
 
 ### 4A. Largest errors
 
 ```{r}
-#| label: error-tables
+#| label: geographic-errors
 error_by_ward <- diagnostics %>% st_drop_geometry() %>% group_by(ward) %>%
   summarize(sales = n(), rmse = sqrt(mean(residual_final^2)),
-             mean_residual = mean(residual_final),
-             median_price = median(sale_price), .groups = "drop")
+    mean_residual = mean(residual_final), median_price = median(sale_price), .groups = "drop")
+worst_ward <- error_by_ward %>% filter(sales >= 50) %>% arrange(desc(rmse)) %>% slice(1)
 error_by_ward %>% filter(sales >= 50) %>% arrange(desc(rmse)) %>% slice_head(n = 6) %>%
-  gt() %>% cols_label(ward = "Ward", sales = "Sales", rmse = "OOF RMSE",
-                      mean_residual = "Mean actual − predicted", median_price = "Median price") %>%
-  fmt_currency(columns = c(rmse, mean_residual, median_price), decimals = 0) %>%
-  tab_header(title = "Largest ward-level errors", subtitle = "Wards with at least 50 retained sales")
+  gt() %>% fmt_currency(columns = c(rmse, mean_residual, median_price), decimals = 0)
+```
 
+Ward **`r worst_ward$ward`** has the largest OOF RMSE among Wards with at least
+50 retained sales: **`r dollars(worst_ward$rmse)`**. Its mean residual is
+**`r dollars(worst_ward$mean_residual)`**. Mean errors can cancel even where individual
+errors are large. Unmeasured renovation, interior quality and unusual luxury
+properties are plausible sources of remaining errors; these diagnostics do not
+identify their causes.
+
+```{r}
+#| label: largest-errors
 largest_errors <- diagnostics %>% st_drop_geometry() %>%
   arrange(desc(abs(residual_final))) %>% slice_head(n = 5) %>%
   select(id, ward, sale_price, pred_final, residual_final)
 largest_errors %>% gt() %>%
-  cols_label(id = "ID", ward = "Ward", sale_price = "Sale price",
-             pred_final = "OOF prediction", residual_final = "Actual − predicted") %>%
   fmt_currency(columns = c(sale_price, pred_final, residual_final), decimals = 0)
 ```
 
-Ward 43 has the largest RMSE among wards with at least 50 sales: **`r dollars(error_by_ward$rmse[error_by_ward$ward == 43])`**. Its mean residual is only **`r dollars(error_by_ward$mean_residual[error_by_ward$ward == 43])`**, so errors in both directions cancel in the average. The most extreme misses are underpredictions: the $14.25 million sale is predicted at **`r dollars(diagnostics$pred_final[diagnostics$id == 19188])`**. Interior quality, renovation, and unusual luxury properties are plausible missing factors.
-
-Ward 42 has only `r error_by_ward$sales[error_by_ward$ward == 42]` sales and is merged with Ward 2 for fitting. Two of the largest misses occur there. Pooling keeps the category estimable but loses some local detail.
-
 ```{r}
 #| label: observed-predicted
-#| fig-alt: "Observed versus out-of-fold predicted prices with a 45-degree reference line. Several luxury homes are substantially underpredicted."
+#| fig-alt: "Actual versus out-of-fold final predictions with a 45-degree reference line."
 p_fit <- ggplot(diagnostics, aes(sale_price, pred_final)) +
   geom_abline(intercept = 0, slope = 1, linetype = 2, color = "#555555") +
-  geom_point(alpha = 0.25, size = 0.8, color = "#2c7fb8") +
+  geom_point(alpha = .25, size = .8, color = "#2c7fb8") +
   scale_x_continuous(labels = scales::label_dollar(scale = 1e-6, suffix = "m")) +
   scale_y_continuous(labels = scales::label_dollar(scale = 1e-6, suffix = "m")) +
-  coord_equal() + labs(title = "The largest misses are expensive houses",
-                       x = "Observed sale price", y = "Out-of-fold prediction")
+  coord_equal() + labs(title = "The final model still misses unusual properties",
+    x = "Observed price", y = "Out-of-fold prediction")
 save_plot(p_fit, "observed_predicted")
 ```
 
 ### 4B. Neighborhood income and valuation ratios
 
-Neighborhood income is tract median household income from **2023 ACS five-year table B19013**, covering 2019–2023. These estimates were [released in December 2024](https://www.census.gov/programs-surveys/acs/news/data-releases/2023.html), so they are used for this retrospective equity check, not as predictors of earlier sales. The `r sum(is.na(diagnostics$income))` sales without a valid tract income remain in the model and are excluded only from the income comparison.
+Tract median income is from the 2023 ACS five-year table B19013 (2019–2023).
+Because those estimates were released after some sales, they are used only for
+retrospective equity diagnostics, not as predictors. The **`r sum(is.na(diagnostics$income_group))`**
+records without a valid income group remain in the regression and are omitted
+only from the income comparison.
+
+```{r}
+#| label: income-summary
+income_summary <- income_metrics %>% filter(model %in% c("m10", "NS"))
+income_summary %>% select(model, income_group, n, median_ratio, mean_ratio, share_overvalued) %>%
+  gt(groupname_col = "model") %>%
+  fmt_number(columns = c(median_ratio, mean_ratio), decimals = 3) %>%
+  fmt_percent(columns = share_overvalued, decimals = 1)
+```
+
+The low-income median ratio rises from **`r sprintf('%.3f', original_row$low_income_median_ratio)`**
+to **`r sprintf('%.3f', final_row$low_income_median_ratio)`**, and the overvalued share rises
+from **`r percent(original_row$low_income_overvalued)`** to **`r percent(final_row$low_income_overvalued)`**.
+Thus, better overall RMSE does not improve this equity diagnostic. The low-income
+mean ratio is **`r sprintf('%.3f', final_row$low_income_mean_ratio)`**. These ratios describe
+neighborhood income groups, not individual owners' incomes.
 
 ```{r}
 #| label: income-ratios
-income_summary <- diagnostics %>% st_drop_geometry() %>% filter(!is.na(income_group)) %>%
-  group_by(income_group) %>% summarize(
-    sales = n(), baseline_ratio = median(pred_baseline / sale_price),
-    median_ratio = median(ratio), mean_ratio = mean(ratio),
-    share_overvalued = mean(ratio > 1), .groups = "drop")
-income_summary %>% gt() %>%
-  cols_label(income_group = "Tract median income", sales = "Sales",
-             baseline_ratio = "Baseline median ratio", median_ratio = "Final median ratio",
-             mean_ratio = "Final mean ratio", share_overvalued = "Above 1") %>%
-  fmt_number(columns = c(baseline_ratio, median_ratio, mean_ratio), decimals = 3) %>%
-  fmt_percent(columns = share_overvalued, decimals = 1)
-
-p_income <- income_summary %>%
-  select(income_group, baseline_ratio, median_ratio) %>%
-  pivot_longer(-income_group, names_to = "model", values_to = "ratio") %>%
-  mutate(model = factor(model, levels = c("baseline_ratio", "median_ratio"),
-                         labels = c("Baseline", "Final"))) %>%
-  ggplot(aes(income_group, ratio, group = model, color = model)) +
-  geom_hline(yintercept = 1, linetype = 2, color = "#666666") +
-  geom_line(linewidth = 0.8) + geom_point(aes(shape = model), size = 3) +
-  scale_color_manual(values = c("#888888", "#2166ac")) +
+#| fig-alt: "Median valuation ratios for original m10 and final North/South across income groups."
+p_income <- income_summary %>% mutate(model = factor(model, levels = c("m10", "NS"))) %>%
+  ggplot(aes(income_group, median_ratio, color = model, group = model)) +
+  geom_hline(yintercept = 1, linetype = 2) + geom_line() + geom_point(size = 2.5) +
+  scale_color_manual(values = c("m10" = "#777777", "NS" = "#2166ac")) +
   labs(title = "Lower-income neighborhoods remain overvalued",
-       x = "Tract median household income", y = "Median predicted / sale price",
-       color = NULL, shape = NULL) + theme(legend.position = "bottom")
+    x = "Tract median household income", y = "Median predicted / sale price", color = "Model") +
+  theme(legend.position = "bottom")
 save_plot(p_income, "income_ratios")
 ```
 
-The final median ratio is **`r sprintf('%.3f', income_summary$median_ratio[1])`** in tracts below $50,000 and **`r sprintf('%.3f', income_summary$median_ratio[4])`** in tracts above $100,000. In the lowest-income group, **`r scales::percent(income_summary$share_overvalued[1], accuracy = 0.1)`** of homes are overvalued. The mean ratio is higher than the median because some low-price sales have very large proportional errors.
-
 ```{r}
 #| label: cleaning-by-income
-cleaning_by_income <- all_sales %>% st_drop_geometry() %>% filter(split == "train") %>%
+cleaning_by_income <- features$all_sales %>% st_drop_geometry() %>% filter(split == "train") %>%
   mutate(income_group = cut(income, c(-Inf, 50000, 75000, 100000, Inf),
-                             labels = levels(diagnostics$income_group))) %>%
-  filter(!is.na(income_group)) %>% group_by(income_group) %>%
-  summarize(original_sales = n(), excluded = sum(exclusion != "Retained"),
-             excluded_share = mean(exclusion != "Retained"),
-             retained_under_50k = sum(exclusion == "Retained" & sale_price < 50000),
-             .groups = "drop")
-cleaning_by_income %>% gt() %>%
-  cols_label(income_group = "Tract median income", original_sales = "Original sales",
-             excluded = "Excluded", excluded_share = "Excluded share",
-             retained_under_50k = "Retained sales below $50k") %>%
-  fmt_percent(columns = excluded_share, decimals = 1)
+    labels = levels(diagnostics$income_group))) %>% filter(!is.na(income_group)) %>%
+  group_by(income_group) %>% summarize(original_sales = n(), excluded = sum(exclusion != "Retained"),
+    excluded_share = mean(exclusion != "Retained"),
+    retained_under_50k = sum(exclusion == "Retained" & sale_price < 50000), .groups = "drop")
+cleaning_by_income %>% gt() %>% fmt_percent(columns = excluded_share, decimals = 1)
 ```
 
-Cleaning removes multiple-property transactions while retaining inexpensive single-property sales. A higher price cutoff would remove some of the homes most affected by overvaluation. Exclusion rates also differ across income groups, so these ratios describe the retained single-property sample. [The Tax Divide](https://www.propublica.org/series/the-tax-divide) documented disproportionately high assessments on lower-value homes. The final model reduces the income gap but does not eliminate that pattern. Holding tax rates and exemptions constant, overvaluation increases an owner's share of the tax burden.
+The comparison describes retained single-property sales. Raising the price
+cutoff would hide some low-price homes with large proportional errors, rather
+than demonstrating improved valuation. [The Tax Divide](https://www.propublica.org/series/the-tax-divide)
+documented disproportionate assessments on lower-value properties. Our model also overvalues lower-income neighborhoods and does not resolve this disparity. Holding tax
+rates and exemptions constant, overvaluation raises an owner's share of the tax burden.
 
 ## Part 5: Predict the test houses
 
 ```{r}
 #| label: predict-test
-# Refit on all retained training sales, then apply the same preprocessing to test.
-fill_final <- learn_fill(train_raw)
-train <- prepare(train_raw, fill_final)
-test <- prepare(test_raw, fill_final)
-m_final <- lm(f_final, data = train, na.action = na.fail)
-predictor_vars <- all.vars(delete.response(terms(f_final)))
-stopifnot(all(complete.cases(test[predictor_vars])))
-preds <- tibble(id = test$id, pred = as.numeric(predict(m_final, newdata = test)))
-stopifnot(identical(preds$id, raw_test$id), nrow(preds) == nrow(raw_test),
-          !anyDuplicated(preds$id), all(is.finite(preds$pred)))
+# Refit the selected formula and the complete feature recipe on all retained training sales.
+recipe_final <- learn_recipe(train_raw)
+train <- prepare(train_raw, recipe_final)
+test <- prepare(test_raw, recipe_final)
+m_final <- lm(f_final, train, na.action = na.fail)
+preds <- tibble(id = test$id, pred = as.numeric(predict(m_final, test)))
+stopifnot(identical(preds$id, read_csv("data/assignment5/chicago_test.csv", show_col_types = FALSE)$id),
+  nrow(preds) == 5789L, !anyDuplicated(preds$id), all(is.finite(preds$pred)))
+write_csv(preds, "data/assignment5/team_Mahjong_predictions.csv")
 write_csv(preds, "data/assignment5/assignment5_predictions.csv")
 tibble(test_rows = nrow(preds), finite_predictions = sum(is.finite(preds$pred)),
        negative_predictions = sum(preds$pred < 0)) %>% knitr::kable()
 ```
 
-**Final CV RMSE: `r dollars(min(model_log$cv_rmse))`.** Pooled out-of-fold RMSE is **`r dollars(sqrt(mean(diagnostics$residual_final^2)))`**. The test file contains `r scales::comma(nrow(preds))` predictions in the original ID order. Test RMSE requires the instructor's hidden sale prices. The linear model produces `r sum(preds$pred < 0)` negative test predictions; the CSV keeps the same unmodified prediction rule evaluated in CV.
+**Final mean-fold CV RMSE: `r dollars(final_row$cv_rmse)`.**
+**Pooled OOF RMSE: `r dollars(final_row$pooled_oof_rmse)`.**
+Predictions for all 5,789 test houses are exported to
+**`team_Mahjong_predictions.csv`**. The test set has no observed prices, so its
+RMSE cannot be calculated before instructor scoring.
+
+```{r}
+#| label: negative-test-case
+negative_test %>% gt() %>%
+  fmt_number(columns = c(lotsize_acre, building_000sf), decimals = 4) %>%
+  fmt_currency(columns = pred, decimals = 0)
+```
+
+Two test predictions remain negative. We retain these values in the output and
+report them as a limitation of the linear model. The test sample includes
+multiple-property sales and a house larger than any retained training property,
+so some predictions extend beyond the population represented in validation.
 
 ## Part 6: Reflection
 
-Location made the largest difference. Adding ward indicators reduced mean fold RMSE from $235,864 to $196,399, and allowing building-area slopes to vary across wards reduced it to $182,389. A square foot does not carry the same predicted value everywhere. The crime measures added little after these terms, suggesting that broad location already captures much of the variation they describe. The final area–age interaction brought RMSE to $181,295, a 35.6% reduction from the baseline.
+Location was the most useful source of improvement. Adding Ward effects and
+allowing the building-area coefficient to vary across Wards substantially
+reduced prediction error. The final North/South adjustment then allowed the
+relationship between lot area and price to differ across two broad regions.
+It improved RMSE and reduced negative predictions without requiring a separate
+regression for every neighborhood. These are predictive associations, not proof
+that geography itself causes the price differences.
 
-**Coefficient reading:** The full-bathroom coefficient is **`r dollars(coef(m_final)['num_full_baths'])`**. Holding the model's other characteristics constant, homes with one additional full bathroom have an estimated price that is higher by this amount. This is a conditional association: bathrooms can also proxy for unobserved interior quality. **Prediction reading:** For two otherwise identical feature records, changing full bathrooms from one to two increases the fitted price by **`r dollars(coef(m_final)['num_full_baths'])`**. It does not establish the return from adding a bathroom.
+The model comparisons also show why RMSE alone is insufficient. Ward-specific
+lot-area slopes achieved a lower error but generated an extreme negative test
+prediction. We preferred the broader North/South adjustment, which produced
+fewer negative values. Nevertheless, two negative test predictions remain, and
+unusual houses are still difficult to value. Valid expensive and old houses
+were retained because removing them would change the population being predicted.
 
-I would use this model as a starting point for assessment review. I would not use its output directly for tax bills. The final median valuation ratio remains about 1.13 in the lowest-income tracts, compared with 0.99 in the highest-income group. Optimizing dollar RMSE has not removed unequal proportional errors. The most expensive homes also produce the largest misses, and the model generates **`r sum(diagnostics$pred_final < 0)` negative held-out predictions**. Those failures need review before values are assigned.
+The full-bathroom coefficient is **`r dollars(bath_coefficient)`**. Holding the other
+predictors fixed, one additional full bathroom changes the fitted price by this
+amount. This does not measure the causal return from adding a bathroom: interior
+condition, renovation and other unrecorded features may also explain the association.
 
-The next improvements would focus on renovation, property condition, and finer location information for sparsely represented areas. I would evaluate them on the same retained sample and inspect both RMSE and income-group ratios. The house-grouped folds estimate performance on other houses in this three-year market. Predicting a future assessment year would need a time-based validation. Finally, the instructor's held-out test will show how well the model-selection result carries over to unseen houses.
+The equity results are less encouraging. Although NS improves overall dollar
+accuracy, the lowest-income group's median valuation ratio and overvalued share
+increase slightly relative to m10. We therefore cannot describe the final model
+as an improvement in assessment fairness. If used for taxation, its remaining
+proportional errors could place excess burden on owners of lower-valued homes.
+
+We would use these predictions to support review, not to set tax bills directly.
+Additional condition data may help, but any changes should be assessed using
+both accuracy and income-group diagnostics. Repeated comparisons on the same
+folds can make the chosen CV result optimistic. Hidden test prices provide a
+separate check, while prediction for future years would require time-based validation.
+
+### Who did what
+
+All four members contributed equally. The table below summarizes their main areas of focus.
+
+| Member | Main areas of focus |
+|---|---|
+| Chenyan Zhao | Feature engineering, model comparison, and interpretation |
+| Peirong Luo | Feature engineering, model comparison, and cross-validation |
+| Terry Xu | Feature engineering, residual diagnostics, and visualization |
+| Xuanyu Zhou | Feature engineering, income-group diagnostics, and interpretation |
+
+### AI Team Statement
+
+Our team uses AI as a supporting tool for coding, data preparation, and communication. Team members remain responsible for the analysis, model choices, interpretation of results, and final submission.
+
+For this assignment, we used Codex to assist with writing and debugging R code, implementing feature engineering and model comparisons, and locating, collecting, and preparing external data. We also used AI to help polish the explanation.
