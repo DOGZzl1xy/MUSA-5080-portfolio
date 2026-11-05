@@ -1,0 +1,79 @@
+---
+title: "Week 9: Predictive Policing"
+description: "Counts, fishnets, and dirty data: count regression, spatial features, and the limits of predictive policing"
+date: 2026-10-30
+---
+
+## What We Did
+
+We used residential burglaries in Philadelphia to introduce count regression and discuss the limitations of predictive policing. The exercise used **2024 crime and 311 records to build features for predicting 2025 burglary counts**, then compared the model with a kernel density baseline.
+
+## Key Concepts
+
+### 1. Fishnets and the Unit of Analysis
+
+Crime incidents are points, so we need spatial units in which to count them. A fishnet divides the city into **500 × 500 ft cells**, with each cell becoming one observation. Equal-sized cells make spatial counts easier to compare, although the choice of grid size still affects the patterns.
+
+The exercise used EPSG:2272, where distances are measured in feet. Always check the CRS before creating grids or calculating distances.
+
+### 2. Why Use Poisson Regression?
+
+Burglary counts are nonnegative integers, and most cells contain zero burglaries. OLS can produce negative predictions and may poorly represent the relationship between the mean and variance.
+
+Poisson regression models the **expected count** through a log link:
+
+$$
+\log(\lambda_i) = \beta_0 + \beta_1 x_{i1} + \cdots
+$$
+
+Exponentiating the linear predictor keeps expected counts positive. Predictions can be fractional because they represent averages, rather than individual observed counts.
+
+For an **unlogged predictor**, $e^\beta$ is the multiplicative change in expected count for a one-unit increase. For example, $\beta = 0.20$ implies approximately **22% more expected burglaries**, holding other predictors constant.
+
+### 3. Overdispersion
+
+Poisson assumes that the conditional variance equals the conditional mean. If variability exceeds what the model allows, the data are **overdispersed**. Negative binomial regression adds a dispersion parameter and can accommodate this additional variation.
+
+### 4. Spatial Features and Leakage
+
+The exercise constructed several types of predictors:
+
+| Feature type | Example |
+|---|---|
+| Count within a cell | Number of abandoned-vehicle reports |
+| Nearest distance | Distance to the closest streetlight outage |
+| kNN distance | Average distance to the three nearest graffiti reports |
+| Distance to a fixed location | Distance to City Hall |
+| Distance to a hotspot | Distance to a previous-year LISA High–High cluster |
+
+Features must be available **at the time of prediction**. Building hotspots from 2025 burglaries to predict those same burglaries would leak the outcome into the predictors. Using 2024 records avoids that particular leakage.
+
+### 5. Compare Against a Simple Baseline
+
+A more complicated model should be compared with a **KDE map of previous-year burglaries**. One classroom comparison measured the share of 2025 burglaries captured within the highest-ranked 10% of cells.
+
+This asks a practical question: does the model identify future concentrations better than simply smoothing last year's crime locations? A fair assessment also requires held-out evaluation.
+
+## Coding Notes
+
+```r
+# Create a 500 × 500 ft grid in a suitable feet-based CRS
+st_make_grid(philly, cellsize = 500, square = TRUE)
+
+# Count burglaries within each cell
+lengths(st_intersects(fishnet, burg_2025))
+
+# Fit a Poisson model
+pois <- glm(f, family = poisson(), data = fishnet)
+
+# Return expected counts instead of log expected counts
+predict(pois, type = "response")
+```
+
+## Policy Discussion
+
+Recorded crime reflects **what happens, what people report, and what police record**. Reporting rates, trust in police, and enforcement practices vary across neighborhoods. Officer-generated records, such as drug-possession arrests, are especially sensitive to patrol locations.
+
+This creates a feedback loop: a model identifies an area, more officers are deployed there, more incidents are recorded, and those records reinforce the model's prediction. The 311 predictors also reflect residents' willingness and ability to report problems.
+
+Cross-validation cannot resolve this measurement problem when both training and test data contain the same bias. **Predicting police records accurately does not necessarily mean predicting actual crime accurately or allocating patrols fairly.**
