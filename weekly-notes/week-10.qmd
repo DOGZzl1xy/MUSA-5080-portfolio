@@ -1,0 +1,178 @@
+---
+title: "Week 10: Geographic Cross-Validation and Logistic Regression"
+description: "Geographic folds, GLM link functions, odds ratios, and binary classification metrics"
+date: 2026-11-06
+---
+
+## What We Did
+
+This week connected two questions: **where a model can generalize** and **how to predict a binary outcome**. We discussed geographic cross-validation, introduced logistic regression through the GLM framework, and examined how classification thresholds change prediction errors.
+
+## Key Concepts
+
+### 1. Geographic Cross-Validation
+
+Random k-fold cross-validation can place nearby observations in both training and validation sets. Because nearby places often share characteristics, the model may benefit from spatial information that would be less available when predicting in a new area.
+
+Geographic CV holds out entire spatial groups:
+
+1. Assign observations to geographic folds.
+2. Train on all folds except one.
+3. Predict observations in the held-out area.
+4. Repeat across areas and summarize performance.
+
+**The validation design should match the prediction task.** Predicting additional observations within familiar neighborhoods differs from predicting in an entirely new district. Geographic folds also do not automatically remove all spatial dependence, especially near shared boundaries.
+
+### 2. Why Logistic Regression?
+
+Logistic regression models a binary outcome, such as:
+
+- Whether a person is rearrested.
+- Whether a patient develops a disease.
+- Whether a household participates in a program.
+
+For an outcome coded 0 or 1:
+
+$$
+p_i = P(Y_i = 1 \mid X_i)
+$$
+
+The model estimates the probability of outcome 1. Ordinary linear regression can produce predictions below 0 or above 1; logistic regression keeps predicted probabilities within these bounds.
+
+### 3. GLMs and Link Functions
+
+A generalized linear model connects the **conditional mean of the outcome** to a linear predictor:
+
+$$
+g(\mu_i) = \eta_i = \beta_0 + \beta_1 x_{i1} + \cdots
+$$
+
+The link function maps the expected outcome to the linear-predictor scale. The inverse link converts that score back into an expected outcome.
+
+| Model | Outcome | Link | Inverse link |
+|---|---|---|---|
+| Linear regression | Continuous | Identity | $\mu = \eta$ |
+| Poisson regression | Count | $\log(\mu)$ | $\mu = e^\eta$ |
+| Logistic regression | Binary | $\log(p/(1-p))$ | $p = 1/(1+e^{-\eta})$ |
+
+The link applies to the **expected value**, not directly to each observed 0 or 1.
+
+### 4. Probability, Odds, and Log-Odds
+
+These describe the same probability on different scales:
+
+$$
+\text{Odds} = \frac{p}{1-p}
+$$
+
+$$
+\text{Log-odds} = \log\left(\frac{p}{1-p}\right)
+$$
+
+For example, if $p = 0.80$, the odds are $4$: the event is four times as likely to occur as not to occur.
+
+| Probability | Odds | Log-odds |
+|---|---|---|
+| 0.20 | 0.25 | -1.386 |
+| 0.50 | 1 | 0 |
+| 0.80 | 4 | 1.386 |
+
+**Odds are not probabilities.** A probability of 0.80 corresponds to odds of 4, not 0.80.
+
+### 5. From Log-Odds to Probability
+
+Logistic regression assumes a linear relationship on the log-odds scale:
+
+$$
+\log\left(\frac{p_i}{1-p_i}\right)
+= \beta_0 + \beta_1 x_{i1} + \cdots
+$$
+
+The inverse link is the sigmoid function:
+
+$$
+p_i = \frac{1}{1+e^{-\eta_i}}
+$$
+
+- $\eta_i = 0$ gives $p_i = 0.50$.
+- $\eta_i > 0$ gives $p_i > 0.50$.
+- $\eta_i < 0$ gives $p_i < 0.50$.
+
+Effects are linear in **log-odds**, while changes in probability depend on the starting probability.
+
+### 6. Interpreting Odds Ratios
+
+For a predictor entered linearly without interactions, a one-unit increase multiplies the odds by:
+
+$$
+OR = e^\beta
+$$
+
+Holding other predictors constant:
+
+- $OR > 1$: higher odds.
+- $OR < 1$: lower odds.
+- $OR = 1$: unchanged odds.
+
+For example, $\beta = \log(2)$ means the odds double. Starting from $p = 0.20$, odds increase from $0.25$ to $0.50$, giving:
+
+$$
+p_{\text{new}} = \frac{0.50}{1+0.50} \approx 0.333
+$$
+
+**Doubling the odds does not double the probability.** An odds ratio above 1 also does not imply that the predicted probability exceeds 50%.
+
+### 7. Classification Thresholds
+
+A probability becomes a predicted class only after choosing a threshold:
+
+$$
+\hat{Y}_i =
+\begin{cases}
+1 & \hat{p}_i \geq t\\
+0 & \hat{p}_i < t
+\end{cases}
+$$
+
+Lowering the threshold labels more observations positive, generally increasing sensitivity and decreasing specificity. Raising it does the reverse.
+
+A threshold of 0.50 is a common starting point. Different thresholds produce different balances of false positives and false negatives.
+
+### 8. Confusion Matrix and Evaluation
+
+| | Actual 1 | Actual 0 |
+|---|---|---|
+| **Predicted 1** | True positive (TP) | False positive (FP) |
+| **Predicted 0** | False negative (FN) | True negative (TN) |
+
+| Metric | Formula | Question |
+|---|---|---|
+| Sensitivity / Recall | $TP/(TP+FN)$ | How many actual positives did we identify? |
+| Specificity | $TN/(TN+FP)$ | How many actual negatives did we identify? |
+| Precision | $TP/(TP+FP)$ | How many positive predictions were correct? |
+
+Accuracy alone can be misleading when one class is rare. A model that predicts the majority class for everyone may have high accuracy while identifying none of the cases of interest.
+
+## Coding Notes
+
+The following is a generic workflow; `outcome` is coded 0/1, and `train` and `test` have already been separated.
+
+```r
+# Fit logistic regression
+model <- glm(
+  outcome ~ x1 + x2,
+  family = binomial(link = "logit"),
+  data = train
+)
+
+# Convert coefficients to odds ratios
+exp(coef(model))
+
+# Predict probabilities on held-out observations
+p <- predict(model, newdata = test, type = "response")
+
+# Apply a classification threshold
+predicted_class <- as.integer(p >= 0.50)
+```
+
+For a binomial model with a logit link, `predict()` returns log-odds by default. **`type = "response"` returns probabilities.**
