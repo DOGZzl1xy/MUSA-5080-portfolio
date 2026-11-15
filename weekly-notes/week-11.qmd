@@ -1,0 +1,165 @@
+---
+title: "Week 11: ROC Curves and Fair Risk Prediction"
+description: "Sensitivity and specificity, accuracy, ROC curves and AUC, and whether a race-blind model is fair"
+date: 2026-11-13
+---
+
+## What We Did
+
+We reviewed sensitivity and specificity, saw why accuracy hides the type of error, and introduced **ROC curves** and **AUC**. In the lab we used ProPublica's **COMPAS** data to predict two-year rearrest without race, then compared error rates for Black and white defendants.
+
+## Key Concepts
+
+### 1. Sensitivity and Specificity
+
+| Rate | Formula | Meaning |
+|---|---|---|
+| Sensitivity (TPR) | $TP/(TP+FN)$ | Share of actual 1s flagged |
+| Specificity | $TN/(TN+FP)$ | Share of actual 0s cleared |
+| False positive rate | $FP/(FP+TN)$ | $1 - \text{specificity}$ |
+| False negative rate | $FN/(FN+TP)$ | $1 - \text{sensitivity}$ |
+
+- **Lower threshold** → more 1s flagged → sensitivity ↑, specificity ↓ ("better safe than sorry").
+- **Higher threshold** → sensitivity ↓, specificity ↑.
+
+COMPAS lab:
+
+| Threshold | Sensitivity | Specificity |
+|---|---|---|
+| 0.3 | 0.90 | 0.31 |
+| 0.5 | 0.55 | 0.79 |
+| 0.7 | 0.20 | 0.96 |
+
+### 2. Accuracy Is Not Enough
+
+Accuracy counts every error the same, so it cannot separate false positives from false negatives. In the lab, the model had **the same accuracy (0.68) for both races** but very different error rates (Section 6).
+
+### 3. ROC Curves
+
+The **receiver operating characteristic** curve comes from WWII radar research. It plots **TPR (y)** against **FPR (x)**; each point is one threshold.
+
+```{r}
+#| label: roc-illustration
+#| echo: false
+#| fig-width: 6
+#| fig-height: 5
+library(ggplot2)
+
+# Illustrative curves from a binormal model: TPR = Phi(Phi^-1(FPR) + d)
+fpr <- seq(0, 1, length.out = 200)
+curves <- rbind(
+  data.frame(fpr, tpr = fpr,                         model = "Coin flip (AUC = 0.50)"),
+  data.frame(fpr, tpr = pnorm(qnorm(fpr) + 0.85),    model = "Useful model (AUC ≈ 0.73)"),
+  data.frame(fpr, tpr = pnorm(qnorm(fpr) + 2.3),     model = "Strong model (AUC ≈ 0.95)")
+)
+curves$model <- factor(curves$model, levels = unique(curves$model))
+
+corners <- data.frame(
+  x = c(0, 1, 0),
+  y = c(0, 1, 1),
+  label = c("(0, 0): flag no one", "(1, 1): flag everyone", "(0, 1): perfect")
+)
+
+ggplot(curves, aes(fpr, tpr, color = model, linetype = model)) +
+  geom_line(linewidth = 1) +
+  geom_point(data = corners, aes(x, y), inherit.aes = FALSE, size = 2.5) +
+  geom_text(data = corners, aes(x, y, label = label), inherit.aes = FALSE,
+            hjust = c(-0.08, 1, 0), vjust = c(-0.6, -1, -1), size = 3.3) +
+  scale_linetype_manual(values = c("dashed", "solid", "solid")) +
+  scale_color_manual(values = c("grey50", "#d62728", "#1f77b4")) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25)) +
+  coord_equal(ylim = c(0, 1.07), clip = "off") +
+  labs(x = "False positive rate (1 − specificity)",
+       y = "True positive rate (sensitivity)",
+       color = NULL, linetype = NULL,
+       title = "Reading an ROC curve") +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.direction = "vertical")
+```
+
+- **(0, 0):** everything labeled 0.
+- **(1, 1):** everything labeled 1.
+- **(0, 1):** perfect classification.
+- **Diagonal:** coin flip.
+
+### 4. AUC
+
+- **0.5** = coin flip, **1.0** = perfect.
+- AUC = probability that a random 1 scores higher than a random 0. It measures **ranking**.
+- A suspiciously high AUC points to **overfitting or leakage**.
+- AUC does not choose the threshold, price the errors, or show whether errors are even across groups.
+
+| Model (COMPAS lab) | AUC |
+|---|---|
+| 5-variable logistic model (age, priors, sex, felony, juvenile record) | 0.73 |
+| COMPAS decile score | 0.71 |
+
+### 5. Choosing a Threshold
+
+The point **closest to (0, 1)**, or the maximum of $\text{sensitivity} + \text{specificity} - 1$ (Youden's J), treats both errors as equally costly. In practice the threshold follows the cost of each error:
+
+- **Restrictive supervision:** false positives cost liberty → higher threshold.
+- **Support services:** false negatives miss people who need help → lower threshold.
+
+### 6. Is a Race-Blind Model Fair?
+
+Threshold 0.5, race not in the model:
+
+| | Base rate | FPR | FNR | Accuracy |
+|---|---|---|---|---|
+| African-American | 0.52 | **0.29** | 0.34 | 0.68 |
+| Caucasian | 0.39 | 0.14 | **0.60** | 0.68 |
+
+Black defendants who were not rearrested were flagged twice as often; white defendants who were rearrested were missed more often.
+
+**Race enters through proxies.** Black defendants had more priors (4.2 vs. 2.3) and were younger (32 vs. 38). Prior arrests reflect where police patrol and whom they stop.
+
+| Experiment | AUC | FPR (Black vs. white) |
+|---|---|---|
+| Race-blind model | 0.73 | 0.29 vs. 0.14 |
+| Add race | 0.73 | 0.33 vs. 0.12 |
+| Drop `priors_count` | 0.65 | 0.31 vs. 0.21 |
+
+**Calibration vs. equal error rates.** The model is calibrated: within each predicted-probability bin both groups are rearrested at similar rates (e.g., [0.4, 0.5): 0.44 vs. 0.42). When base rates differ, a calibrated model cannot also equalize FPR and FNR. Which fairness definition to prioritize is a policy choice.
+
+## Coding Notes
+
+```r
+library(pROC)
+
+data$pred <- predict(model, newdata = data, type = "response")
+
+rates_at <- function(data, threshold) {
+  data %>%
+    mutate(flag = as.integer(pred >= threshold)) %>%
+    summarize(
+      threshold   = threshold,
+      sensitivity = sum(flag == 1 & outcome == 1) / sum(outcome == 1),
+      specificity = sum(flag == 0 & outcome == 0) / sum(outcome == 0),
+      accuracy    = mean(flag == outcome)
+    )
+}
+
+map_dfr(seq(0.3, 0.8, by = 0.05), function(t) rates_at(data, t))
+
+roc_obj <- roc(data$outcome, data$pred)
+auc(roc_obj)
+
+ggroc(roc_obj, legacy.axes = TRUE) +
+  geom_abline(linetype = "dashed")
+
+ggroc(list(Model = roc_obj, COMPAS = roc(data$outcome, data$decile_score)),
+      legacy.axes = TRUE)
+
+data %>%
+  mutate(flag = as.integer(pred >= 0.5)) %>%
+  group_by(group) %>%
+  summarize(
+    fpr = sum(flag == 1 & outcome == 0) / sum(outcome == 0),
+    fnr = sum(flag == 0 & outcome == 1) / sum(outcome == 1)
+  )
+```
+
+- `type = "response"` returns probabilities; the default is log-odds.
+- `legacy.axes = TRUE` puts FPR on a standard 0–1 x-axis.
+- `read_csv(url, name_repair = make.unique)` handles COMPAS's duplicate column names.
